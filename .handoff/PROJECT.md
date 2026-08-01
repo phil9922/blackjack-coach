@@ -65,3 +65,7 @@ using it at a table.
   (it's what real students study), with Wong's Professional Blackjack filling plays BJA omits.
   Where they disagree by a point (12v3, 16v9), BJA wins. Stand deviations on 15/16 vs 9/10 are
   skipped when surrender is available — surrender stays the better play.
+- 2026-08-01 — A counting system without a verified index set ships with deviation grading OFF and
+  says so in the UI, rather than borrowing Hi-Lo's indices. An index number belongs to the system it
+  was computed for; reusing one would silently teach a wrong play, which is the failure this project
+  exists to prevent. `supportsDeviations` in `src/counting/systems.ts` is that switch.

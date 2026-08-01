@@ -1,6 +1,36 @@
 # Log
 
 ## 2026-08-01
+- **Published the repo** as `phil9922/blackjack-coach` — **private**, at the owner's request
+  (`18f2ce3`, pushed). Added MIT `LICENSE`, a `license` field in `package.json`, and a README
+  license section; GitHub detects MIT and all 12 topics from CHECKLIST.md are set. Also untracked
+  `tsconfig.tsbuildinfo` and `.claude-swarm-feed.log` (local build/tooling output) and ignored them.
+- **Added KO and Hi-Opt I counting systems** (`dbc035d`), the last open P2 of any size. New
+  `src/counting/systems.ts` holds tag values, balance, IRC and a `supportsDeviations` flag;
+  `Settings.countSystem` threads through `game.ts` (draw, reveal, reshuffle, drill burns), the
+  quiz, speed drill, bet advisor and drill planner. Only Hi-Lo keeps deviation grading — the other
+  two grade as basic strategy with an in-app note saying why, which is the option PROJECT.md
+  sanctioned. KO needed more than new tags: negative IRC of 4(1-decks), no true count to show or
+  quiz on, and a bet ramp anchored to its published key count and pivot rather than converted to a
+  Hi-Lo true count (that conversion would have maxed the bet out several running-count points too
+  early). 26 new tests; suite is 224 passing.
+- **Found and fixed a real count bug by driving the running app**, not by testing: switching
+  systems mid-shoe kept the old running count and carried on adding the new system's tags,
+  producing a meaningless number. `applySettings` now takes a fresh shoe on a system change.
+  Verified with 13 Playwright checks against :5199 (chip text, IRC, no TC for KO, bet-advice
+  wording, warning copy) — all green — plus a regression test and an engine-level invariant that
+  the running count always equals the IRC plus exactly the face-up cards, for all three systems.
+  Both new test groups were mutation-checked (broke a tag value, then the hole-card rule) to
+  confirm they actually bite.
+- **Built a live-API quality harness for the AI coach** (`7052acc`): `src/coach-ai/real-api.test.ts`,
+  skipped unless `ANTHROPIC_API_KEY` is set so `npm test` stays offline. The fixture is shaped so a
+  coach following the prompt has to notice three things — a soft-double leak spread one miss each
+  across eight cells, over-doubling on hard hands, and a 16 vs 10 losing exactly what perfect play
+  expects — and the third test runs the live coach twice with the leak fixed to assert the running
+  list carries forward instead of churning. **Not yet run against a real key** (none available on
+  this machine; the app takes the user's own key), so coach output quality remains unverified.
+
+### Earlier today
 - Renamed the project to **Blackjack Coach** and wrote the README (`d0fec7b`). Directory
   `blackjack-trainer` → `blackjack-coach`; `package.json`, `index.html`, the in-app header, and a
   profile-import error string all renamed to match (the stale in-app name was caught by taking
