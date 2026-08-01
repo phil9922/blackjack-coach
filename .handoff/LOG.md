@@ -1,6 +1,13 @@
 # Log
 
 ## 2026-08-01
+- Table animations (`30fbb4a`): hole-card 3D flip on reveal (card remounts on reveal so it
+  re-fires), result-badge and net-payout pops, all off under prefers-reduced-motion. Verified by
+  recording `animationstart` events rather than sampling, since the flip is shorter than a tick.
+- Deviation drills (`c6c2093`): counting-mode drill scenarios that reach a target true count by
+  discarding real cards to the tray (shown face-up, countable) instead of faking the count; burns
+  aim at the count as it will read at decision time. Each index gets both a live and a just-short
+  variant so the drill trains judgment. All P1s now done too.
 - Verified H17 deviation indices against BJA's H17 chart + Wong's Professional Blackjack
   (`d0bb374`): corrected 12v6 (-4, was -1), 13v3 (-3), 12v4 (-1), 16v9 (+4); added
   surrender-aware deviation semantics (stand deviations skipped when surrender available;

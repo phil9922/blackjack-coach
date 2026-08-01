@@ -13,9 +13,9 @@ None. Note: port 5173 is occupied by an unrelated app on this machine — always
 `npm run dev -- --port 5199 --strictPort` and point tests at :5199.
 
 ## Next step
-Both P0s are done — the milestone (runs well on a phone; verified H17 indices) is complete.
-Everything remaining is P1/P2. Top P1: deviation drills (construct high/low-true-count scenarios
-in counting mode so index plays get practiced deliberately).
+All P0s and P1s are done. Only P2 extras remain — the most useful is probably the count
+speed-drill mini-game (~1.5h) or "even money" wording for blackjack vs a dealer ace (~30m).
+Nothing is blocking; the app is complete and usable as-is.
 
 ## Open questions
 - Should drill mode also construct high-true-count scenarios to practice deviations (currently it
