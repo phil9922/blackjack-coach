@@ -1,25 +1,29 @@
 # Handoff
 
 ## Current focus
-The app is feature-complete and committed (4 commits on `main`): a React+Vite+TS blackjack trainer
-that grades every decision against H17/6D/DAS basic strategy with explanations, hint button, bet
-advisor, AI table-mates, Hi-Lo counting mode (deviations + quizzes), stats with outcome-loss trends,
-a coaching engine, drill mode that targets the user's weak spots, gamification (7 skill tracks, XP,
-ranks, 16 badges), and multiple user profiles with per-profile bankrolls. 144 unit tests + Playwright
-E2E passes all green.
+Preparing to publish as a public GitHub repo named **`blackjack-coach`**. The app itself is
+feature-complete: React + Vite + TS, grades every decision against a verified H17/6D/DAS chart with
+explanations, hint button, bet advisor, AI table-mates, Hi-Lo counting mode (20 verified deviation
+indices + quizzes + speed drill), stats with outcome-vs-expectation trends, an 11-rule coaching
+engine, drill mode (including honest count scenarios), gamification (7 skills, XP, ranks, 17
+badges), profiles with export/import, and an optional Claude-powered AI coach (live + on-demand).
+198 unit tests plus several Playwright suites, all green.
+
+The project directory was renamed `blackjack-trainer` → `blackjack-coach` this session; in-app
+branding, `package.json`, and `index.html` were renamed to match. README written with screenshots
+in `docs/`.
 
 ## Blockers
 None. Note: port 5173 is occupied by an unrelated app on this machine — always run
 `npm run dev -- --port 5199 --strictPort` and point tests at :5199.
 
 ## Next step
-Everything on the checklist is done except two deliberately-deferred extras: alternative counting
-systems (~2h — deviation indices are Hi-Lo-specific, so a second system needs its own verified
-indices or must disable deviation grading while selected) and cloud profile sync (~4h, needs a
-backend, which the client-side-only design rules out for now). Nothing is blocking; the app is
-complete. Next real work should come from actually using it at a table.
+Publishing steps, in order: **add a LICENSE** (without one the repo is legally all-rights-reserved,
+which defeats publishing — MIT is the conventional pick), then create the GitHub repo as
+`blackjack-coach`, set the description and topics recorded in CHECKLIST.md, and push.
 
 ## Open questions
-- Should drill mode also construct high-true-count scenarios to practice deviations (currently it
-  drills basic-strategy cells only)?
-- Are cloud-synced profiles wanted eventually? Current profiles are per-browser localStorage.
+- Which license? MIT assumed but not chosen.
+- Alternative counting systems (KO, Hi-Opt I) would need their own verified indices, or deviation
+  grading disabled while selected — worth it, or keep the app Hi-Lo only?
+- Cloud-synced profiles need a backend, which the client-side-only constraint currently rules out.

@@ -1,6 +1,16 @@
 # Log
 
 ## 2026-08-01
+- Renamed the project to **Blackjack Coach** and wrote the README (`d0fec7b`). Directory
+  `blackjack-trainer` → `blackjack-coach`; `package.json`, `index.html`, the in-app header, and a
+  profile-import error string all renamed to match (the stale in-app name was caught by taking
+  README screenshots, not by grep). README leads with the verified-chart differentiator and the
+  four H17 cells commonly-circulated summaries get wrong; screenshots regenerated post-rebrand into
+  `docs/`. All figures in it were counted from source rather than estimated (17 badges, 7 skills,
+  20 deviation indices, 11 coach rules, 36 curated explanations, 198 tests).
+- Chose the repo name after checking GitHub: `blackjack-trainer`, `blackjack-strategy`, and
+  `blackjack` are all taken by active repos with similar scope, so an exact-match name would rank
+  below them. Settled on `blackjack-coach`, with AI kept out of the name (see PROJECT.md).
 - Deepened pattern detection (`f1caace`) after comparing the engine against an external
   114-hand analysis of the user's play. Two structural gaps found: no rule existed for
   *choosing* double wrongly (the "weak dealer means double" overcorrection was invisible), and

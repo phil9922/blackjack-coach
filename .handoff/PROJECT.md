@@ -35,9 +35,11 @@ and data-safety decisions should hold up to public users, not just personal tole
 - Dev server must run on port 5199 (`--strictPort`) — 5173 is occupied by another app on this machine.
 
 ## Definition of done
-Current milestone is done when the app **runs well on a phone**: the table, verdict rail, modals,
-and Stats/Progress/Skills screens usable at ~375–430px widths with no horizontal page scroll and
-tap-friendly controls. Feature set is otherwise complete.
+The previous milestone — **runs well on a phone**, usable at ~375–430px with no horizontal scroll —
+was met on 2026-08-01. The current milestone is **published**: the repo is public on GitHub as
+`blackjack-coach` with a license, description, and topics set, and the README stands on its own for
+someone who has never seen it. Feature set is complete; further work should come from actually
+using it at a table.
 
 ## Decisions
 - 2026-08-01 — TypeScript + exhaustive double-transcription chart tests, because chart correctness
@@ -50,6 +52,11 @@ tap-friendly controls. Feature set is otherwise complete.
   without inflating stats.
 - 2026-08-01 — Profiles switch via full page reload for clean re-initialization; simplicity over
   seamlessness.
+- 2026-08-01 — Repo named `blackjack-coach`, with "AI" deliberately kept out of the name despite
+  being a real feature. A repo name is permanent in a way a description isn't (renaming costs links
+  and stars), "AI" is the most crowded namespace on GitHub rather than a differentiator, and the AI
+  layer is optional while the verified chart is the actual moat. AI stays prominent in the
+  description and topics, which is what search matches anyway.
 - 2026-08-01 — The AI coach *supplements* the rule-based coach rather than replacing it: the
   deterministic engine still detects tendencies and drives drill mode offline, and the LLM read is
   an extra lens. The API key is stored outside per-profile data specifically so profile
