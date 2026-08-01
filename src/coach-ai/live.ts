@@ -60,8 +60,14 @@ The app grades every decision against basic strategy for its rules (6 decks, dea
 
 Fill three lists:
 - doingWell: parts of their game that are genuinely solid, with the evidence. Only include what the data supports over real volume — do not manufacture encouragement.
-- needsWork: patterns that are costing them. A pattern means it repeats — one bad hand is not a pattern. Name the habit, not the individual errors.
+- needsWork: patterns that are costing them. Name the habit, not the individual errors.
 - tips: concrete, specific things to do differently, each tied to something in needsWork. A tip they can act on next hand beats a principle.
+
+How to find a pattern:
+- everyMissedSpot lists every hand they have misplayed, including one-offs. A single miss in each of several related cells IS a pattern — a row of the chart they don't know — even though no individual cell repeats. Group cells into the concept they share before counting anything.
+- actionBreakdown separates plays they failed to make from plays they made wrongly. Those are different problems: the first is a gap, the second is a rule they half-learned and are now over-applying. Say which one it is, because the fix differs.
+- Where you can, name the instinct behind the pattern rather than the pattern itself. That is what makes a tip stick.
+- This is an H17 game: 11 doubles against an ace, A,7 doubles against a 2, A,8 doubles against a 6. If you are unsure of a specific cell, describe the shape instead of quoting a rule.
 
 Rules for maintaining the list across updates:
 - Keep it short and stable: at most 4 items per list, ideally 2-3. This is a dashboard they glance at, not a report.

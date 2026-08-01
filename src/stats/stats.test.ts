@@ -114,7 +114,7 @@ describe('coach', () => {
       decision({ keyStr: 'hard11', keyLabel: 'hard 11', up: '6', chosen: 'hit', correct: 'double', wasCorrect: false })
     )
     const tips = coachTips(stats)
-    const doubles = tips.find((t) => t.id === 'missed-doubles')
+    const doubles = tips.find((t) => t.id === 'missed-hard-doubles')
     expect(doubles).toBeDefined()
     expect(doubles!.bucket).toBe('missed-opportunity')
     expect(doubles!.tip).toMatch(/hard 11 vs 6/)
@@ -126,7 +126,7 @@ describe('coach', () => {
       decision({ chosen: 'hit', correct: 'double', wasCorrect: false }),
       ...Array.from({ length: 20 }, () => decision({ correct: 'double', chosen: 'double', wasCorrect: true })),
     ]
-    expect(coachTips(stats).find((t) => t.id === 'missed-doubles')).toBeUndefined()
+    expect(coachTips(stats).find((t) => t.id === 'missed-hard-doubles')).toBeUndefined()
   })
 
   it('report names a focus area and separates leaks from hard spots', () => {

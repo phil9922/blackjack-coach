@@ -5,6 +5,8 @@ import {
   accuracyTrend,
   topMistakes,
   worstMatchups,
+  actionBreakdown,
+  type ActionBreakdown,
 } from '../stats/analysis'
 import { coachTips, strengths } from '../stats/coach'
 import { deriveSessions } from '../stats/sessions'
@@ -26,6 +28,14 @@ export interface CoachDigest {
   accuracyByCategory: Record<string, { seen: number; pct: number | null }>
   accuracyTrend: { window: string; pct: number | null }[]
   topMistakes: { spot: string; wrongOf: string; theyDid: string; bookSays: string }[]
+  /**
+   * EVERY cell they have ever misplayed, including one-offs. The repeated ones
+   * are already in topMistakes; this is here so patterns that span many cells
+   * with one miss each (a whole row of the chart, say) are still visible.
+   */
+  everyMissedSpot: { spot: string; wrongOf: string; theyDid: string; bookSays: string }[]
+  /** what KIND of error, as opposed to which cell */
+  actionBreakdown: ActionBreakdown
   worstMatchups: {
     spot: string
     hands: number
@@ -72,6 +82,15 @@ export function buildDigest(
       theyDid: m.mostCommonWrongAction,
       bookSays: m.correctAction,
     })),
+    // minSeen 1 — a single miss in each of eight soft-double cells is a
+    // pattern even though no individual cell repeats.
+    everyMissedSpot: topMistakes(stats, 40, 1).map((m) => ({
+      spot: `${m.keyLabel} vs ${m.up}`,
+      wrongOf: `${m.wrong}/${m.seen}`,
+      theyDid: m.mostCommonWrongAction,
+      bookSays: m.correctAction,
+    })),
+    actionBreakdown: actionBreakdown(stats),
     worstMatchups: worstMatchups(stats.outcomes, 5).map((m) => ({
       spot: `${m.bucket} vs ${m.up}`,
       hands: m.n,

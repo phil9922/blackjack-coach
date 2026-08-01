@@ -69,6 +69,63 @@ export function topMistakes(stats: StatsState, n = 5, minSeen = 3): CellMistake[
   return out.sort((a, b) => b.wrong - a.wrong || b.wrong / b.seen - a.wrong / a.seen).slice(0, n)
 }
 
+/**
+ * Action-level counts. Where topMistakes says *which cells* went wrong, this
+ * says *what kind of error* it was — the difference between not knowing a play
+ * and over-applying one you just learned.
+ */
+export interface ActionBreakdown {
+  softDoubles: { offered: number; taken: number }
+  hardDoubles: { offered: number; taken: number }
+  /** doubled when the book didn't call for it — overcorrection, not ignorance */
+  doubledWrongly: number
+  doublesMade: number
+  splits: { offered: number; taken: number }
+  splitWrongly: number
+  softHands: { seen: number; stoodWrongly: number }
+  stiffs: { vsWeakDealer: number; hitWrongly: number; vsStrongDealer: number; stoodWrongly: number }
+}
+
+export function actionBreakdown(stats: StatsState): ActionBreakdown {
+  const ds = unassisted(stats.decisions)
+  const isSoft = (d: DecisionRecord) => d.keyStr.startsWith('soft')
+  const isStiff = (d: DecisionRecord) => {
+    const t = Number(d.keyStr.replace('hard', ''))
+    return d.keyStr.startsWith('hard') && t >= 12 && t <= 16
+  }
+  const weakUp = (d: DecisionRecord) => ['2', '3', '4', '5', '6'].includes(d.up)
+
+  const count = (fn: (d: DecisionRecord) => boolean) => ds.filter(fn).length
+
+  return {
+    softDoubles: {
+      offered: count((d) => d.correct === 'double' && isSoft(d)),
+      taken: count((d) => d.correct === 'double' && isSoft(d) && d.wasCorrect),
+    },
+    hardDoubles: {
+      offered: count((d) => d.correct === 'double' && !isSoft(d)),
+      taken: count((d) => d.correct === 'double' && !isSoft(d) && d.wasCorrect),
+    },
+    doubledWrongly: count((d) => d.chosen === 'double' && !d.wasCorrect),
+    doublesMade: count((d) => d.chosen === 'double'),
+    splits: {
+      offered: count((d) => d.correct === 'split'),
+      taken: count((d) => d.correct === 'split' && d.wasCorrect),
+    },
+    splitWrongly: count((d) => d.chosen === 'split' && !d.wasCorrect),
+    softHands: {
+      seen: count(isSoft),
+      stoodWrongly: count((d) => isSoft(d) && d.chosen === 'stand' && !d.wasCorrect),
+    },
+    stiffs: {
+      vsWeakDealer: count((d) => isStiff(d) && weakUp(d)),
+      hitWrongly: count((d) => isStiff(d) && weakUp(d) && d.chosen === 'hit' && !d.wasCorrect),
+      vsStrongDealer: count((d) => isStiff(d) && !weakUp(d)),
+      stoodWrongly: count((d) => isStiff(d) && !weakUp(d) && d.chosen === 'stand' && !d.wasCorrect),
+    },
+  }
+}
+
 // --- hand outcome trends ----------------------------------------------------
 
 export type StartBucket =

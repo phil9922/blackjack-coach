@@ -34,15 +34,37 @@ const ex = (d: DecisionRecord) => `${d.keyLabel} vs ${d.up}`
 
 const RULES: TendencyRule[] = [
   {
-    id: 'missed-doubles',
+    id: 'missed-soft-doubles',
     bucket: 'missed-opportunity',
-    title: 'Leaving doubles on the table',
-    match: (d) => d.correct === 'double' && !d.wasCorrect,
-    opportunity: (d) => d.correct === 'double',
-    minCount: 4,
+    title: 'Not doubling soft hands',
+    match: (d) => d.correct === 'double' && !d.wasCorrect && d.keyStr.startsWith('soft'),
+    opportunity: (d) => d.correct === 'double' && d.keyStr.startsWith('soft'),
+    minCount: 3,
     minRate: 0.25,
     tip: (examples, count) =>
-      `You've passed up ${count} correct doubles (${examples.join(', ')}). Doubling when the odds favor you is where blackjack profit comes from — the book only calls for it when you're a clear favorite. Rules of thumb: always double 11, double 10 except vs 10/A, double 9 vs 3-6, and double soft 15-18 against dealer 4-6.`,
+      `You've passed up ${count} soft doubles (${examples.join(', ')}). This is the most common way good players leave money on the table: a soft hand looks decent, so you protect it. But the ace means the draw can't bust you — a soft double is a bet on the dealer breaking, not on your total. Under these rules: A,2-A,3 double vs 5-6; A,4-A,5 double vs 4-6; A,6 doubles vs 3-6; A,7 doubles vs 2-6; and A,8 doubles vs 6.`,
+  },
+  {
+    id: 'missed-hard-doubles',
+    bucket: 'missed-opportunity',
+    title: 'Not doubling strong hard totals',
+    match: (d) => d.correct === 'double' && !d.wasCorrect && !d.keyStr.startsWith('soft'),
+    opportunity: (d) => d.correct === 'double' && !d.keyStr.startsWith('soft'),
+    minCount: 3,
+    minRate: 0.25,
+    tip: (examples, count) =>
+      `You've passed up ${count} hard doubles (${examples.join(', ')}). These are the clearest edges in the game — get the extra bet out. Always double 11 (against everything, ace included, under these rules), double 10 except against a 10 or ace, and double 9 against 3 through 6.`,
+  },
+  {
+    id: 'over-doubling',
+    bucket: 'mistake',
+    title: 'Doubling on hands too weak to double',
+    match: (d) => d.chosen === 'double' && !d.wasCorrect,
+    opportunity: (d) => d.chosen === 'double',
+    minCount: 3,
+    minRate: 0.2,
+    tip: (examples, count) =>
+      `${count} of your doubles weren't called for (${examples.join(', ')}). This is the overcorrection that follows learning to double more: a breaking dealer is only half the condition. Doubling means you take exactly one card and can't hit again — so you also need a hand that one card can turn into a winner. 9, 10, and 11 qualify; 12 through 16 do not, no matter how weak the dealer looks.`,
   },
   {
     id: 'missed-splits',
@@ -97,7 +119,7 @@ const RULES: TendencyRule[] = [
     minCount: 4,
     minRate: 0.2,
     tip: (examples, count) =>
-      `You've stood on soft hands that should keep improving ${count} times (${examples.join(', ')}). A soft hand can't bust with one card — soft 17 and lower always draws, and soft 18 only stands against 2, 7, or 8. The ace is a safety net; use it.`,
+      `You've stood on soft hands that should keep improving ${count} times (${examples.join(', ')}). This usually comes from carrying a hard-total rule across to soft hands: "17 or more, stand" is right for hard totals and wrong for soft ones. Hard 17 is a full stop; soft 17 is a decision — it can't bust on one card, so it always draws, and soft 18 only stands against 2, 7, or 8.`,
   },
   {
     id: 'bad-splits',
