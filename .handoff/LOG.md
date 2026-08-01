@@ -1,6 +1,13 @@
 # Log
 
 ## 2026-08-01
+- Live AI coach (`4cb4db3`): reviews the record between hands on a configurable cadence and keeps
+  a running doing-well / costing-you / try-this list, using structured outputs (json_schema) so the
+  list is data. Each run receives its own previous assessment and returns an updated one, so items
+  resolve instead of accumulating. In-game alerts are gated by a deliberately high bar in the
+  prompt. `shouldRunLive` requires both new hands and new graded decisions so idle rounds can't
+  spend a paid call. Verified end-to-end with a mocked API response (16 checks) — request shape,
+  alert, list rendering, persistence, and no duplicate call on reload.
 - Optional AI coach (`5853b6c`): Progress-tab panel sends a compact derived-stats digest to
   `claude-opus-5` via the official SDK (browser-direct, user's own key) and renders a narrative
   read. Refusal fallbacks enabled; typed SDK errors mapped to plain-language messages. API key
