@@ -1,3 +1,5 @@
+![Blackjack Coach — an AI blackjack trainer: play hands, get instant feedback, and learn the math behind every move.](img/header-banner.svg)
+
 # ♠ Blackjack Coach
 
 **A blackjack trainer that grades every decision, tells you *why*, and drills the hands you keep getting wrong.**
