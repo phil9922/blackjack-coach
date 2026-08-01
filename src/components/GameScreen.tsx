@@ -169,9 +169,19 @@ export function GameScreen({
             Dealer {dealerValue && <span className="dealer__total">{dealerValue}</span>}
           </div>
           <div className="dealer__cards">
-            {state.dealerCards.map((c, i) => (
-              <CardView key={i} card={c} hidden={i === 1 && !state.holeRevealed} />
-            ))}
+            {state.dealerCards.map((c, i) => {
+              const isHole = i === 1
+              const faceDown = isHole && !state.holeRevealed
+              return (
+                <CardView
+                  // remounting on reveal is what re-fires the flip animation
+                  key={`${i}-${faceDown ? 'down' : 'up'}`}
+                  card={c}
+                  hidden={faceDown}
+                  flipIn={isHole && state.holeRevealed}
+                />
+              )
+            })}
           </div>
         </section>
 
