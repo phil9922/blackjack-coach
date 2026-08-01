@@ -14,6 +14,7 @@ import { gradeDecision, gradeInsurance } from '../strategy/grade'
 import type { AiProfileId } from '../players/profiles'
 import { AI_PROFILES } from '../players/profiles'
 import { decideAiAction, decideAiBet, decideAiInsurance } from '../players/aiPlayer'
+import type { DrillPlan, DrillSpot } from '../drill/planner'
 
 export type Phase =
   | 'betting'
@@ -34,6 +35,8 @@ export interface Settings {
   showCount: boolean
   quizFrequency: 'off' | 'normal' | 'high'
   aiSeats: AiSeatConfig[]
+  /** drill mode: deal the user's trouble spots more often */
+  drillMode: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -42,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showCount: true,
   quizFrequency: 'normal',
   aiSeats: [],
+  drillMode: false,
 }
 
 export interface Seat {
@@ -107,13 +111,15 @@ export interface GameState {
   lastQuiz: QuizResult | null
   handsSinceQuiz: number
   handsPlayed: number
+  /** label of the drill spot this round was stacked toward, if any */
+  drilledLabel: string | null
   /** pending rule/settings edits that apply at the next betting phase */
   pendingRules: TableRules | null
   pendingSettings: Settings | null
 }
 
 export type GameAction =
-  | { type: 'PLACE_BET_AND_DEAL'; amount: number }
+  | { type: 'PLACE_BET_AND_DEAL'; amount: number; drill?: DrillPlan }
   | { type: 'INSURANCE'; take: boolean }
   | { type: 'PLAYER_ACTION'; action: Action }
   | { type: 'USE_HINT' }
@@ -165,6 +171,7 @@ export function initGame(opts?: {
     lastQuiz: null,
     handsSinceQuiz: 0,
     handsPlayed: 0,
+    drilledLabel: null,
     pendingRules: null,
     pendingSettings: null,
   }
@@ -213,6 +220,41 @@ function draw(state: GameState, faceUp: boolean): { card: Card; state: GameState
       runningCount: faceUp ? state.runningCount + hiLoValue(card.rank) : state.runningCount,
     },
   }
+}
+
+/**
+ * Drill-mode draw: pull the next card OF A GIVEN RANK by swapping it forward
+ * in the shoe (a rigged shuffle, not a conjured card — the shoe's composition
+ * and therefore the count stay honest). Falls back to a natural draw when the
+ * rank is exhausted. Ten-value ranks match any face card.
+ */
+function drawRank(state: GameState, rank: Rank): { card: Card; state: GameState } {
+  const want = normalizeRank(rank)
+  let found = -1
+  for (let i = state.nextCard; i < state.shoe.length; i++) {
+    if (normalizeRank(state.shoe[i].rank) === want) {
+      found = i
+      break
+    }
+  }
+  if (found === -1) return draw(state, true)
+  const shoe = state.shoe.slice()
+  ;[shoe[state.nextCard], shoe[found]] = [shoe[found], shoe[state.nextCard]]
+  return draw({ ...state, shoe }, true)
+}
+
+function pickDrillSpot(state: GameState, drill: DrillPlan): { spot: DrillSpot | null; state: GameState } {
+  const total = drill.spots.reduce((s, x) => s + x.weight, 0)
+  if (total <= 0) return { spot: null, state }
+  const roll = rngNext(state.rngState)
+  let target = roll.value * total
+  for (const spot of drill.spots) {
+    target -= spot.weight
+    if (target <= 0) {
+      return { spot: spot.playerRanks ? spot : null, state: { ...state, rngState: roll.state } }
+    }
+  }
+  return { spot: null, state: { ...state, rngState: roll.state } }
 }
 
 export function cardsRemaining(state: GameState): number {
@@ -267,7 +309,7 @@ export function availabilityFor(state: GameState, seat: Seat, hand: PlayerHand):
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'PLACE_BET_AND_DEAL':
-      return state.phase === 'betting' ? deal(state, action.amount) : state
+      return state.phase === 'betting' ? deal(state, action.amount, action.drill) : state
     case 'INSURANCE':
       return state.phase === 'insurance' ? applyUserInsurance(state, action.take) : state
     case 'PLAYER_ACTION':
@@ -320,7 +362,7 @@ function applySettings(state: GameState, settings: Settings): GameState {
 
 // --- dealing ---------------------------------------------------------------
 
-function deal(state: GameState, amount: number): GameState {
+function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
   const bet = Math.round(amount)
   if (bet < state.rules.tableMin || bet > state.rules.tableMax || bet > state.userBankroll) {
     return state
@@ -336,8 +378,17 @@ function deal(state: GameState, amount: number): GameState {
     roundResults: null,
     insuranceNet: 0,
     lastQuiz: null,
+    drilledLabel: null,
   }
   if (s.pendingShuffle) s = reshuffle(s)
+
+  let drillSpot: DrillSpot | null = null
+  if (s.settings.drillMode && drill && drill.spots.length > 0) {
+    const picked = pickDrillSpot(s, drill)
+    s = picked.state
+    drillSpot = picked.spot
+    if (drillSpot) s = { ...s, drilledLabel: drillSpot.label }
+  }
 
   // AI bets + fresh hands
   const seats = s.seats.map((seat) => ({ ...seat, hands: [] as PlayerHand[], insurance: null }))
@@ -352,15 +403,19 @@ function deal(state: GameState, amount: number): GameState {
     }
   }
 
-  // Two rounds of cards to each seat, then dealer up + hole.
+  // Two rounds of cards to each seat, then dealer up + hole. In drill mode the
+  // user's two cards and the dealer upcard come from the picked trouble spot.
   for (let round = 0; round < 2; round++) {
     for (const seat of seats) {
-      const d = draw(s, true)
+      const d =
+        seat.kind === 'user' && drillSpot?.playerRanks
+          ? drawRank(s, drillSpot.playerRanks[round])
+          : draw(s, true)
       s = d.state
       seat.hands[0] = { ...seat.hands[0], cards: [...seat.hands[0].cards, d.card] }
     }
   }
-  const up = draw(s, true)
+  const up = drillSpot?.dealerUp ? drawRank(s, drillSpot.dealerUp) : draw(s, true)
   s = up.state
   const hole = draw(s, false) // face down: not counted until revealed
   s = hole.state
@@ -393,7 +448,10 @@ function deal(state: GameState, amount: number): GameState {
 }
 
 function applyUserInsurance(state: GameState, take: boolean): GameState {
-  const grade = gradeInsurance(take, state.settings.mode, currentTrueCount(state))
+  const grade = {
+    ...gradeInsurance(take, state.settings.mode, currentTrueCount(state)),
+    drilled: state.drilledLabel !== null,
+  }
   const seats = state.seats.map((seat) =>
     seat.kind === 'user' ? { ...seat, insurance: take ? seat.hands[0].bet / 2 : 0 } : seat
   )
@@ -498,15 +556,18 @@ function applyUserAction(state: GameState, action: Action): GameState {
     (action !== 'surrender' || av.canSurrender)
   if (!legal) return state
 
-  const grade = gradeDecision({
-    chosen: action,
-    cards: hand.cards,
-    dealerUp: normalizeRank(state.dealerCards[0].rank),
-    av,
-    mode: state.settings.mode,
-    trueCount: currentTrueCount(state),
-    hinted: state.hintUsed,
-  })
+  const grade = {
+    ...gradeDecision({
+      chosen: action,
+      cards: hand.cards,
+      dealerUp: normalizeRank(state.dealerCards[0].rank),
+      av,
+      mode: state.settings.mode,
+      trueCount: currentTrueCount(state),
+      hinted: state.hintUsed,
+    }),
+    drilled: state.drilledLabel !== null,
+  }
 
   let s: GameState = {
     ...state,

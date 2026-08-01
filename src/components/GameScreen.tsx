@@ -11,6 +11,7 @@ import { CountQuizModal } from './CountQuizModal'
 import { hintFor, type Hint } from '../strategy/hint'
 import type { StatsApi } from '../hooks/useStats'
 import { coachTips, type CoachTip } from '../stats/coach'
+import { buildDrillPlan } from '../drill/planner'
 import type { Action } from '../strategy/types'
 
 export function GameScreen({
@@ -80,7 +81,8 @@ export function GameScreen({
 
   const onDeal = (amount: number, advised: number) => {
     stats.recordBetAdvice(Math.abs(amount - advised) <= state.rules.tableMin / 2)
-    dispatch({ type: 'PLACE_BET_AND_DEAL', amount })
+    const drill = state.settings.drillMode ? buildDrillPlan(stats.stats) : undefined
+    dispatch({ type: 'PLACE_BET_AND_DEAL', amount, drill })
   }
 
   const dealerValue = useMemo(() => {
@@ -114,6 +116,12 @@ export function GameScreen({
             ))}
           </div>
         </section>
+
+        {state.drilledLabel && state.phase !== 'betting' && (
+          <div className="drill-chip" title="Drill mode stacked this deal toward one of your trouble spots">
+            ◎ drill hand
+          </div>
+        )}
 
         {state.settings.mode === 'counting' && state.settings.showCount && (
           <div className="count-chip" title="Running count / true count">

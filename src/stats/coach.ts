@@ -156,6 +156,83 @@ export function coachTips(stats: StatsState): CoachTip[] {
   return tips.sort((a, b) => b.count / Math.max(b.opportunities, 1) - a.count / Math.max(a.opportunities, 1))
 }
 
+export interface Strength {
+  title: string
+  detail: string
+}
+
+const CAT_NAMES: Record<string, string> = {
+  hard: 'hard totals',
+  soft: 'soft hands',
+  pair: 'pairs',
+  surrender: 'surrender decisions',
+  deviation: 'count deviations',
+  insurance: 'insurance decisions',
+}
+
+/** What the user is doing RIGHT — mastered areas, cleaned-up cells, momentum. */
+export function strengths(stats: StatsState): Strength[] {
+  const out: Strength[] = []
+  const ds = unassisted(stats.decisions)
+
+  // Mastered categories: enough volume, high accuracy.
+  for (const [cat, a] of Object.entries(accuracyByCategory(stats))) {
+    if (a.seen >= 15 && a.pct !== null && a.pct >= 90) {
+      out.push({
+        title: `Solid on ${CAT_NAMES[cat]}`,
+        detail: `${a.pct}% correct over ${a.seen} decisions — this part of your game is trustworthy.`,
+      })
+    }
+  }
+
+  // Trap cells handled perfectly at meaningful volume.
+  const cells = new Map<string, { label: string; seen: number; correct: number }>()
+  for (const d of ds) {
+    const id = `${d.keyStr}|${d.up}`
+    const c = cells.get(id) ?? { label: `${d.keyLabel} vs ${d.up}`, seen: 0, correct: 0 }
+    c.seen++
+    if (d.wasCorrect) c.correct++
+    cells.set(id, c)
+  }
+  const perfect = [...cells.values()]
+    .filter((c) => c.seen >= 5 && c.correct === c.seen)
+    .sort((a, b) => b.seen - a.seen)
+    .slice(0, 3)
+  for (const c of perfect) {
+    out.push({ title: `${c.label}: ${c.seen}/${c.seen}`, detail: 'Never missed it. Locked in.' })
+  }
+
+  // Most-improved category: first half vs second half of its own history.
+  let bestImprovement: { cat: string; from: number; to: number } | null = null
+  for (const cat of Object.keys(CAT_NAMES)) {
+    const catDs = ds.filter((d) => d.category === cat)
+    if (catDs.length < 16) continue
+    const half = Math.floor(catDs.length / 2)
+    const pctOf = (arr: typeof catDs) =>
+      Math.round((arr.filter((d) => d.wasCorrect).length / arr.length) * 100)
+    const from = pctOf(catDs.slice(0, half))
+    const to = pctOf(catDs.slice(half))
+    if (to - from >= 15 && (!bestImprovement || to - from > bestImprovement.to - bestImprovement.from)) {
+      bestImprovement = { cat, from, to }
+    }
+  }
+  if (bestImprovement) {
+    out.push({
+      title: `Most improved: ${CAT_NAMES[bestImprovement.cat]}`,
+      detail: `${bestImprovement.from}% in your early play, ${bestImprovement.to}% recently — the training is landing.`,
+    })
+  }
+
+  if (stats.streak.best >= 15) {
+    out.push({
+      title: `Best streak: ${stats.streak.best} in a row`,
+      detail: 'Long correct runs mean the book is becoming reflex, not recall.',
+    })
+  }
+
+  return out
+}
+
 export interface CoachReport {
   tips: CoachTip[]
   focus: string | null

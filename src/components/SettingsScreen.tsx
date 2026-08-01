@@ -99,6 +99,16 @@ export function SettingsScreen({
           />
           <span>Show the running/true count (turn off to test yourself)</span>
         </label>
+        <label className="settings__row settings__row--check">
+          <input
+            type="checkbox"
+            checked={settings.drillMode}
+            onChange={(e) => setSettings({ ...settings, drillMode: e.target.checked })}
+          />
+          <span>
+            Drill mode <em>(the trainer learns your trouble spots and deals them more often — see the Progress tab for what it's currently targeting)</em>
+          </span>
+        </label>
         <label className="settings__row">
           <span>Count quiz frequency</span>
           <select

@@ -49,6 +49,8 @@ export interface GradedDecision {
   source: 'basic' | 'deviation'
   trueCountAtDecision?: number
   hinted: boolean
+  /** true when the deal was stacked toward a trouble spot by drill mode */
+  drilled?: boolean
   explanation: Explanation
 }
 

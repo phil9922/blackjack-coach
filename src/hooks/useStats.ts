@@ -56,6 +56,7 @@ export function useStats(): StatsApi {
               category: grade.category,
               source: grade.source,
               hinted: grade.hinted,
+              drilled: grade.drilled ?? false,
               tc: grade.trueCountAtDecision,
             },
             DECISION_CAP

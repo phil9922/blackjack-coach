@@ -14,6 +14,7 @@ export interface DecisionRecord {
   category: DecisionCategory
   source: 'basic' | 'deviation'
   hinted: boolean
+  drilled?: boolean
   tc?: number
 }
 

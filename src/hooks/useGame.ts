@@ -21,9 +21,16 @@ export const DEFAULT_CONFIG: PersistedConfig = {
 }
 
 export function useGame(stats: StatsApi): [GameState, React.Dispatch<GameAction>] {
-  const [state, dispatch] = useReducer(gameReducer, undefined, () =>
-    initGame(loadPersisted(DEFAULT_CONFIG))
-  )
+  const [state, dispatch] = useReducer(gameReducer, undefined, () => {
+    // Deep-merge defaults so settings added in newer versions (e.g. drillMode)
+    // exist even when an older saved config is loaded.
+    const persisted = loadPersisted(DEFAULT_CONFIG)
+    return initGame({
+      ...persisted,
+      rules: { ...DEFAULT_RULES, ...persisted.rules },
+      settings: { ...DEFAULT_SETTINGS, ...persisted.settings },
+    })
+  })
 
   // Drive AI seats and the dealer at a watchable pace.
   useEffect(() => {
