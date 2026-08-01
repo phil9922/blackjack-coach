@@ -2,7 +2,15 @@ import { useState } from 'react'
 import type { GameState, GameAction, Settings, AiSeatConfig } from '../engine/game'
 import type { TableRules } from '../engine/rules'
 import { AI_PROFILES, AI_NAMES, type AiProfileId } from '../players/profiles'
-import { savePersisted } from '../stats/storage'
+import {
+  savePersisted,
+  getProfiles,
+  getActiveProfile,
+  createProfile,
+  switchProfile,
+  renameProfile,
+  deleteProfile,
+} from '../stats/storage'
 
 export function SettingsScreen({
   state,
@@ -163,6 +171,74 @@ export function SettingsScreen({
         </button>
         {saved && <span className="settings__saved">Saved — applies next hand.</span>}
       </div>
+
+      <fieldset className="settings__group">
+        <legend>Player profiles</legend>
+        <p className="settings__fixed">
+          Each profile keeps its own stats, skill progression, badges, settings, and bankroll.
+        </p>
+        {getProfiles().map((p) => {
+          const active = p.id === getActiveProfile().id
+          return (
+            <div key={p.id} className="settings__row profile-row">
+              <span className={active ? 'profile-row__name profile-row__name--active' : 'profile-row__name'}>
+                {p.name}
+                {active && ' (active)'}
+              </span>
+              {!active && (
+                <button
+                  className="btn btn--ghost"
+                  onClick={() => {
+                    switchProfile(p.id)
+                    window.location.reload()
+                  }}
+                >
+                  Switch to
+                </button>
+              )}
+              <button
+                className="btn btn--ghost"
+                onClick={() => {
+                  const name = window.prompt('New name?', p.name)
+                  if (name !== null) {
+                    renameProfile(p.id, name)
+                    window.location.reload()
+                  }
+                }}
+              >
+                Rename
+              </button>
+              <button
+                className="btn btn--ghost profile-row__delete"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Delete "${p.name}" and ALL its history, skills, and badges? This cannot be undone.`
+                    )
+                  ) {
+                    deleteProfile(p.id)
+                    window.location.reload()
+                  }
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )
+        })}
+        <button
+          className="btn btn--ghost"
+          onClick={() => {
+            const name = window.prompt('Name for the new profile?')
+            if (name !== null) {
+              createProfile(name)
+              window.location.reload()
+            }
+          }}
+        >
+          + New profile
+        </button>
+      </fieldset>
     </div>
   )
 }

@@ -1,0 +1,106 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+import {
+  getProfiles,
+  getActiveProfile,
+  createProfile,
+  switchProfile,
+  renameProfile,
+  deleteProfile,
+  loadStats,
+  saveStats,
+  loadPersisted,
+  savePersisted,
+} from './storage'
+import { emptyStats } from './model'
+
+// Minimal localStorage for the node test environment.
+function installFakeStorage() {
+  const store = new Map<string, string>()
+  ;(globalThis as Record<string, unknown>).localStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => store.clear(),
+  }
+  return store
+}
+
+let store: Map<string, string>
+
+beforeEach(() => {
+  store = installFakeStorage()
+})
+
+describe('profile registry', () => {
+  it('bootstraps a first profile on a fresh browser', () => {
+    const profiles = getProfiles()
+    expect(profiles).toHaveLength(1)
+    expect(profiles[0].name).toBe('Player 1')
+    expect(getActiveProfile().id).toBe(profiles[0].id)
+  })
+
+  it('migrates pre-profile data into the first profile', () => {
+    const legacy = { ...emptyStats(), handsPlayed: 42 }
+    store.set('bjt.stats.v1', JSON.stringify(legacy))
+    store.set('bjt.settings.v1', JSON.stringify({ buyIn: 750 }))
+
+    expect(loadStats().handsPlayed).toBe(42)
+    expect(loadPersisted({ buyIn: 500 }).buyIn).toBe(750)
+    expect(store.has('bjt.stats.v1')).toBe(false) // legacy keys consumed
+  })
+
+  it('create switches active; each profile has isolated stats', () => {
+    saveStats({ ...emptyStats(), handsPlayed: 10 })
+    const first = getActiveProfile()
+    const second = createProfile('Dana')
+    expect(getActiveProfile().id).toBe(second.id)
+    expect(loadStats().handsPlayed).toBe(0) // fresh profile, fresh stats
+
+    saveStats({ ...emptyStats(), handsPlayed: 3 })
+    switchProfile(first.id)
+    expect(loadStats().handsPlayed).toBe(10) // original untouched
+    switchProfile(second.id)
+    expect(loadStats().handsPlayed).toBe(3)
+  })
+
+  it('settings are per-profile too', () => {
+    savePersisted({ buyIn: 900 })
+    createProfile('Fresh')
+    expect(loadPersisted({ buyIn: 500 }).buyIn).toBe(500)
+  })
+
+  it('savePersisted merges instead of clobbering other fields', () => {
+    savePersisted({ buyIn: 900 })
+    savePersisted({ bankroll: 640 })
+    const loaded = loadPersisted<{ buyIn: number; bankroll?: number }>({ buyIn: 500 })
+    expect(loaded.buyIn).toBe(900)
+    expect(loaded.bankroll).toBe(640)
+  })
+
+  it('rename keeps id and data', () => {
+    const p = getActiveProfile()
+    saveStats({ ...emptyStats(), handsPlayed: 7 })
+    renameProfile(p.id, 'Lucky')
+    expect(getActiveProfile()).toMatchObject({ id: p.id, name: 'Lucky' })
+    expect(loadStats().handsPlayed).toBe(7)
+  })
+
+  it('delete removes data and re-activates another profile', () => {
+    const first = getActiveProfile()
+    saveStats({ ...emptyStats(), handsPlayed: 99 })
+    const second = createProfile('Temp')
+    switchProfile(first.id)
+    deleteProfile(first.id)
+    expect(getActiveProfile().id).toBe(second.id)
+    expect(getProfiles()).toHaveLength(1)
+    expect([...store.keys()].some((k) => k.includes(first.id))).toBe(false)
+  })
+
+  it('deleting the last profile leaves a fresh one', () => {
+    const only = getActiveProfile()
+    deleteProfile(only.id)
+    const profiles = getProfiles()
+    expect(profiles).toHaveLength(1)
+    expect(profiles[0].id).not.toBe(only.id)
+  })
+})

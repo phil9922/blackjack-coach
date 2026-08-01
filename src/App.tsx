@@ -7,7 +7,13 @@ import { ProgressScreen } from './components/ProgressScreen'
 import { SkillsScreen } from './components/SkillsScreen'
 import { SettingsScreen } from './components/SettingsScreen'
 import type { TrainingMode } from './engine/types'
-import { savePersisted } from './stats/storage'
+import {
+  savePersisted,
+  getProfiles,
+  getActiveProfile,
+  createProfile,
+  switchProfile,
+} from './stats/storage'
 import { playerRank } from './gamify/skills'
 
 type Screen = 'table' | 'skills' | 'stats' | 'progress' | 'settings'
@@ -24,6 +30,21 @@ export default function App() {
   const stats = useStats()
   const [state, dispatch] = useGame(stats)
   const [screen, setScreen] = useState<Screen>('table')
+  const [profiles] = useState(getProfiles)
+  const [activeProfile] = useState(getActiveProfile)
+
+  const onProfileChange = (value: string) => {
+    if (value === '__new') {
+      const name = window.prompt('Name for the new profile?')
+      if (name === null) return
+      createProfile(name)
+    } else {
+      if (value === activeProfile.id) return
+      switchProfile(value)
+    }
+    // A full reload re-initializes every subsystem from the new profile's data.
+    window.location.reload()
+  }
 
   const setMode = (mode: TrainingMode) => {
     const settings = { ...(state.pendingSettings ?? state.settings), mode }
@@ -46,6 +67,21 @@ export default function App() {
         <h1 className="brand">
           <span className="brand__mark">♠</span> Blackjack Trainer
         </h1>
+
+        <select
+          className="profile-select"
+          value={activeProfile.id}
+          onChange={(e) => onProfileChange(e.target.value)}
+          aria-label="Player profile"
+          title="Player profile — each keeps its own stats, skills, and bankroll"
+        >
+          {profiles.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+          <option value="__new">+ New profile…</option>
+        </select>
 
         <div className="mode-toggle" role="radiogroup" aria-label="Training mode">
           <button

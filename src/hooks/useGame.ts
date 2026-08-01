@@ -2,7 +2,7 @@ import { useEffect, useReducer, useRef } from 'react'
 import type { GameState, GameAction } from '../engine/game'
 import { gameReducer, initGame, activeSeat, DEFAULT_SETTINGS } from '../engine/game'
 import { DEFAULT_RULES, DEFAULT_BUY_IN } from '../engine/rules'
-import { loadPersisted } from '../stats/storage'
+import { loadPersisted, savePersisted } from '../stats/storage'
 import type { StatsApi } from './useStats'
 
 /** milliseconds between visible AI/dealer steps */
@@ -12,6 +12,9 @@ export interface PersistedConfig {
   rules: typeof DEFAULT_RULES
   settings: typeof DEFAULT_SETTINGS
   buyIn: number
+  /** per-profile carryover — absent on a fresh profile */
+  bankroll?: number
+  totalBuyIn?: number
 }
 
 export const DEFAULT_CONFIG: PersistedConfig = {
@@ -25,12 +28,23 @@ export function useGame(stats: StatsApi): [GameState, React.Dispatch<GameAction>
     // Deep-merge defaults so settings added in newer versions (e.g. drillMode)
     // exist even when an older saved config is loaded.
     const persisted = loadPersisted(DEFAULT_CONFIG)
-    return initGame({
-      ...persisted,
+    const base = initGame({
       rules: { ...DEFAULT_RULES, ...persisted.rules },
       settings: { ...DEFAULT_SETTINGS, ...persisted.settings },
+      buyIn: persisted.buyIn,
     })
+    // Restore this profile's bankroll where it left off.
+    return {
+      ...base,
+      userBankroll: persisted.bankroll ?? base.userBankroll,
+      totalBuyIn: persisted.totalBuyIn ?? base.totalBuyIn,
+    }
   })
+
+  // Persist the bankroll whenever it changes (settlement, insurance, rebuy).
+  useEffect(() => {
+    savePersisted({ bankroll: state.userBankroll, totalBuyIn: state.totalBuyIn })
+  }, [state.userBankroll, state.totalBuyIn])
 
   // Drive AI seats and the dealer at a watchable pace.
   useEffect(() => {

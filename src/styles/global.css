@@ -97,6 +97,39 @@ select:focus-visible {
   margin-right: 2px;
 }
 
+.profile-select {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--paper);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 0.82rem;
+  max-width: 160px;
+}
+
+.profile-select option {
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.profile-row {
+  flex-wrap: wrap;
+}
+
+.profile-row__name {
+  min-width: 170px;
+  font-weight: 600;
+}
+
+.profile-row__name--active {
+  color: var(--accent-deep);
+}
+
+.profile-row__delete {
+  color: var(--miss);
+}
+
 .mode-toggle {
   display: flex;
   border: 1px solid var(--accent-deep);
