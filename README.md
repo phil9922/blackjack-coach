@@ -115,3 +115,7 @@ No cloud sync — profiles live in one browser. No real-money anything. No claim
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+☕ If this project helped you, [buy me a coffee](https://ko-fi.com/phil9922)!
