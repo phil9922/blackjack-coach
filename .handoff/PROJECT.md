@@ -73,4 +73,8 @@ using it at a table.
   the Vitest environment silently turned every `npm test` into four billed API calls; the live coach
   check now needs `COACH_LIVE=1` (via `npm run test:coach`) on top of a key. The offline guarantee
   covers the test suite, not just the app.
+- 2026-08-01 — No hosting. The app is built locally (`npm run build` + `npm run preview`) and not
+  deployed anywhere. The repo is private and the app is single-player and client-only, so a public
+  URL would add an attack surface and a maintenance burden for no benefit. Revisit only if the repo
+  goes public.
 

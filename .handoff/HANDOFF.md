@@ -25,6 +25,11 @@ backend or a transcription session, not features the app is missing.
 `.env` in the project root holds the Claude API key (gitignored, and confirmed absent from the
 production bundle). `npm test` stays offline and free; `npm run test:coach` is the paid live check.
 
+**Nothing is deployed and no hosting is configured** — no workflow, no `vercel.json`/`netlify.toml`,
+no `base` set in `vite.config.ts`. `npm run build` then `npm run preview` serves the production
+bundle at <http://localhost:4173/>, local-only. A subpath host like GitHub Pages would additionally
+need `base: '/blackjack-coach/'`; Vercel and Netlify would not.
+
 ## Open questions
 - The AI coach's output was verified good over four live runs and needed no prompt changes. Two
   cosmetic drifts if they ever start to grate: the on-demand read runs ~340-365 words against a
@@ -37,4 +42,8 @@ production bundle). `npm test` stays offline and free; `npm run test:coach` is t
   thing currently missing from those systems, and it is a transcription-and-verification job, not a
   coding one.
 - Cloud-synced profiles need a backend, which the client-side-only constraint rules out.
-- Repo is private — flip it public later, or keep it personal?
+- Repo is private — flip it public later, or keep it personal? Hosting was declined this session in
+  favour of a local build; if that changes, the target choice is Vercel/Netlify (no config change)
+  vs GitHub Pages (needs a `base`, and Pages on a private repo needs a paid plan).
+- `img/header-banner.png` is committed but unreferenced — the README uses the SVG. It is kept as a
+  raster for a GitHub social preview card, which requires PNG and wants exactly the 2:1 it now is.

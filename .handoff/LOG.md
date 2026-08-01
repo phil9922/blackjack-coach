@@ -22,6 +22,18 @@
   the running count always equals the IRC plus exactly the face-up cards, for all three systems.
   Both new test groups were mutation-checked (broke a tag value, then the hole-card rule) to
   confirm they actually bite.
+- Added the header banner to the README and cropped it (`d570097`, `4d7ef22`, `e6e1153`). Used
+  `img/header-banner.svg` over the 766K PNG — verified it renders identically by rasterizing it the
+  way GitHub does (as an `<img>`, not inlined) — then cropped its viewBox from 1310x760 to the
+  1280x640 green panel, which removed the white margin and clipped the two decorative circles that
+  were reading as sage-grey where they spilled onto white. One attribute changed; no shapes touched.
+  Re-exported `header-banner.png` from the cropped source at the same 4x scale: 5120x2560, exactly
+  2:1 (GitHub's social-preview ratio), and 380K instead of 766K now the white canvas is gone. Edges
+  verified against a magenta backdrop and by pixel-checking all four corners plus both edge
+  midpoints.
+- Built and smoke-tested the production bundle: served `dist/` and drove it in a browser (counting
+  mode, a dealt hand, action buttons, zero console errors), and confirmed the real key from `.env`
+  is absent from the build. No hosting was set up — see the decision in PROJECT.md.
 - Documented the paid-test setup in the README: corrected the stale `npm test  # 198 tests` line to
   224, added `npm run test:coach`, and wrote down the `.env` / `ANTHROPIC_API_KEY` contract
   including why an API key must never carry a `VITE_` prefix (Vite inlines those into `dist/`).
