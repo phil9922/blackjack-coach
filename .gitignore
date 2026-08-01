@@ -4,3 +4,10 @@ dist
 .DS_Store
 *.tsbuildinfo
 .claude-swarm-feed.log
+
+# Never commit credentials. The AI coach uses the user's own Claude API key,
+# supplied at runtime — nothing here should ever hold one.
+.env
+.env.*
+*.key
+secrets/
