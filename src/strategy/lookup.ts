@@ -69,7 +69,7 @@ export function getCorrectAction(
   trueCount: number
 ): CorrectPlay {
   if (mode === 'counting') {
-    const dev = findDeviation(key, normalizeRank(up), trueCount)
+    const dev = findDeviation(key, normalizeRank(up), trueCount, av.canSurrender)
     if (dev) {
       const legal =
         (dev.action !== 'double' || av.canDouble) &&
