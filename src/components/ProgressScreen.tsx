@@ -4,6 +4,7 @@ import { coachReport, strengths } from '../stats/coach'
 import { deriveSessions } from '../stats/sessions'
 import { buildDrillPlan, drillTargets } from '../drill/planner'
 import { savePersisted } from '../stats/storage'
+import { AiCoachPanel } from './AiCoachPanel'
 
 function fmtDate(t: number): string {
   return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -93,6 +94,13 @@ export function ProgressScreen({
           </div>
         </div>
       </section>
+
+      <AiCoachPanel
+        stats={stats.stats}
+        mode={settings.mode}
+        bankroll={state.userBankroll}
+        totalBuyIn={state.totalBuyIn}
+      />
 
       <section className={`panel panel--drill ${settings.drillMode ? 'is-on' : ''}`}>
         <div className="drill-head">

@@ -121,6 +121,32 @@ export function deleteProfile(id: string): void {
   saveRegistry({ activeId, profiles })
 }
 
+// --- Claude API key (optional AI coach) --------------------------------------
+
+/**
+ * Stored outside the per-profile keys on purpose: it belongs to the person,
+ * not the player profile, and keeping it out of the settings blob means it
+ * can never ride along in a profile export.
+ */
+const API_KEY = 'bjt.claude-api-key'
+
+export function loadApiKey(): string {
+  try {
+    return localStorage.getItem(API_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+export function saveApiKey(key: string): void {
+  try {
+    if (key.trim()) localStorage.setItem(API_KEY, key.trim())
+    else localStorage.removeItem(API_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 // --- profile export / import ------------------------------------------------
 
 export interface ProfileExport {

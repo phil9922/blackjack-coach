@@ -12,6 +12,8 @@ import {
   deleteProfile,
   exportProfile,
   importProfile,
+  loadApiKey,
+  saveApiKey,
 } from '../stats/storage'
 
 function downloadProfile(id: string, name: string) {
@@ -36,6 +38,8 @@ export function SettingsScreen({
   const [rules, setRules] = useState<TableRules>(state.pendingRules ?? state.rules)
   const [settings, setSettings] = useState<Settings>(state.pendingSettings ?? state.settings)
   const [saved, setSaved] = useState(false)
+  const [apiKey, setApiKey] = useState(loadApiKey)
+  const [keySaved, setKeySaved] = useState(false)
 
   const apply = () => {
     dispatch({ type: 'UPDATE_RULES', rules })
@@ -195,6 +199,55 @@ export function SettingsScreen({
         </button>
         {saved && <span className="settings__saved">Saved — applies next hand.</span>}
       </div>
+
+      <fieldset className="settings__group">
+        <legend>AI coach (optional)</legend>
+        <p className="settings__fixed">
+          With your own Claude API key, the Progress tab can ask Claude for a written read on how
+          you play. Everything else in this app runs offline and works without a key.
+        </p>
+        <label className="settings__row">
+          <span>Claude API key</span>
+          <input
+            type="password"
+            placeholder="sk-ant-…"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            onBlur={() => saveApiKey(apiKey)}
+            autoComplete="off"
+          />
+        </label>
+        <div className="settings__row">
+          <button
+            className="btn btn--ghost"
+            onClick={() => {
+              saveApiKey(apiKey)
+              setKeySaved(true)
+              setTimeout(() => setKeySaved(false), 2000)
+            }}
+          >
+            Save key
+          </button>
+          {apiKey && (
+            <button
+              className="btn btn--ghost profile-row__delete"
+              onClick={() => {
+                setApiKey('')
+                saveApiKey('')
+              }}
+            >
+              Remove key
+            </button>
+          )}
+          {keySaved && <span className="settings__saved">Key saved.</span>}
+        </div>
+        <p className="settings__warning">
+          <strong>Know what this means:</strong> the key is stored in this browser and sent straight
+          from this page to Anthropic — there's no server in between. Anything that can run script
+          in this browser can read it, and usage bills to your account. Use a key scoped to this
+          purpose, and remove it here when you're done. It is never included in profile exports.
+        </p>
+      </fieldset>
 
       <fieldset className="settings__group">
         <legend>Player profiles</legend>
