@@ -1,6 +1,13 @@
 # Log
 
 ## 2026-08-01
+- Verified H17 deviation indices against BJA's H17 chart + Wong's Professional Blackjack
+  (`d0bb374`): corrected 12v6 (-4, was -1), 13v3 (-3), 12v4 (-1), 16v9 (+4); added
+  surrender-aware deviation semantics (stand deviations skipped when surrender available;
+  reverse Fab 4 indices for 15v10/15vA in negative shoes); 11vA confirmed basic. All values
+  locked by dedicated index tests. Both P0s now done — milestone complete.
+- Profile export/import as JSON (`8136e0b`): per-profile Export download, Import with
+  validation, round-trip tested.
 - Mobile QA sweep done (`022268a`): compact header at <=700px, 46px cards, removed the desktop
   min-height dead gap, settings-row wrapping + the `fieldset` min-content overflow fix, and
   auto-scroll of the verdict rail into view on stacked layouts (back to controls after ack).

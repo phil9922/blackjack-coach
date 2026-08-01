@@ -47,3 +47,7 @@ tap-friendly controls. Feature set is otherwise complete.
   without inflating stats.
 - 2026-08-01 — Profiles switch via full page reload for clean re-initialization; simplicity over
   seamlessness.
+- 2026-08-01 — Deviation indices follow Blackjack Apprenticeship's H17 chart as primary authority
+  (it's what real students study), with Wong's Professional Blackjack filling plays BJA omits.
+  Where they disagree by a point (12v3, 16v9), BJA wins. Stand deviations on 15/16 vs 9/10 are
+  skipped when surrender is available — surrender stays the better play.

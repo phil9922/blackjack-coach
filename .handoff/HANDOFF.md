@@ -13,10 +13,9 @@ None. Note: port 5173 is occupied by an unrelated app on this machine — always
 `npm run dev -- --port 5199 --strictPort` and point tests at :5199.
 
 ## Next step
-Per PROJECT.md, the milestone is done when the app runs well on a phone: do the mobile QA sweep at
-375–430px (top P0). Second P0: verify the Illustrious 18 / Fab 4 deviation indices in
-`src/strategy/deviations.ts` against an H17-specific published reference — chart correctness is a
-must-never-break invariant and the training targets real casino play.
+Both P0s are done — the milestone (runs well on a phone; verified H17 indices) is complete.
+Everything remaining is P1/P2. Top P1: deviation drills (construct high/low-true-count scenarios
+in counting mode so index plays get practiced deliberately).
 
 ## Open questions
 - Should drill mode also construct high-true-count scenarios to practice deviations (currently it
