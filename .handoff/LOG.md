@@ -1,6 +1,16 @@
 # Log
 
 ## 2026-08-01
+- Deepened pattern detection (`f1caace`) after comparing the engine against an external
+  114-hand analysis of the user's play. Two structural gaps found: no rule existed for
+  *choosing* double wrongly (the "weak dealer means double" overcorrection was invisible), and
+  missed-doubles lumped soft and hard together, hiding the common profile of reliable hard
+  doubles + weak soft doubles. Added `over-doubling`, split into `missed-soft-doubles` /
+  `missed-hard-doubles`, added `actionBreakdown` (kind of error vs which cell), and the AI digest
+  now carries every missed cell (minSeen 1) so a pattern spread thin across many cells stays
+  visible. Both prompts teach how to read it rather than what to find.
+- Also verified that external analysis against this app's chart: 4 of its cells were S17 answers,
+  wrong for H17 (11 vs A, A,7 vs 2, A,8 vs 6, and A,4/A,5 vs 4). Flagged to the user.
 - Live AI coach (`4cb4db3`): reviews the record between hands on a configurable cadence and keeps
   a running doing-well / costing-you / try-this list, using structured outputs (json_schema) so the
   list is data. Each run receives its own previous assessment and returns an updated one, so items
