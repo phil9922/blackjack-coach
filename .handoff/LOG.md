@@ -1,6 +1,12 @@
 # Log
 
 ## 2026-08-01
+- Optional AI coach (`5853b6c`): Progress-tab panel sends a compact derived-stats digest to
+  `claude-opus-5` via the official SDK (browser-direct, user's own key) and renders a narrative
+  read. Refusal fallbacks enabled; typed SDK errors mapped to plain-language messages. API key
+  stored under its own global localStorage key so profile exports can never carry it — asserted by
+  test. Gated at 20 graded decisions. Browser test confirmed CORS works (a bad key returns a clean
+  401 surfaced as a friendly error); the success path needs a real key, so it is user-verified.
 - Table sounds (`c1a939b`): Web Audio oscillator voices (card, chip, correct, miss, level-up), no
   asset files, off by default, toggle in Settings. Verified by spying on createOscillator — silent
   by default, audible once enabled. Full E2E regression re-run: 32 checks green.
