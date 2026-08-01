@@ -135,6 +135,11 @@ select:focus-visible {
   color: var(--miss);
 }
 
+.import-label {
+  cursor: pointer;
+  display: inline-block;
+}
+
 .mode-toggle {
   display: flex;
   border: 1px solid var(--accent-deep);

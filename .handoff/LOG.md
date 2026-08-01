@@ -1,6 +1,10 @@
 # Log
 
 ## 2026-08-01
+- Mobile QA sweep done (`022268a`): compact header at <=700px, 46px cards, removed the desktop
+  min-height dead gap, settings-row wrapping + the `fieldset` min-content overflow fix, and
+  auto-scroll of the verdict rail into view on stacked layouts (back to controls after ack).
+  Zero horizontal overflow on all six screens at 390px; 144 unit tests + desktop E2E still green.
 - Set up handoff tracking.
 - Built the entire app from an empty directory in one session, 4 commits:
   - `5ca9f44` core trainer: pure engine (shoe/hands/H17 dealer/payouts), multi-seat game reducer,

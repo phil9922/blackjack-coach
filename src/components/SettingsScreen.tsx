@@ -10,7 +10,21 @@ import {
   switchProfile,
   renameProfile,
   deleteProfile,
+  exportProfile,
+  importProfile,
 } from '../stats/storage'
+
+function downloadProfile(id: string, name: string) {
+  const data = exportProfile(id)
+  if (!data) return
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${name.replace(/[^\w-]+/g, '_')}.bjt-profile.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 export function SettingsScreen({
   state,
@@ -208,6 +222,9 @@ export function SettingsScreen({
               >
                 Rename
               </button>
+              <button className="btn btn--ghost" onClick={() => downloadProfile(p.id, p.name)}>
+                Export
+              </button>
               <button
                 className="btn btn--ghost profile-row__delete"
                 onClick={() => {
@@ -226,18 +243,44 @@ export function SettingsScreen({
             </div>
           )
         })}
-        <button
-          className="btn btn--ghost"
-          onClick={() => {
-            const name = window.prompt('Name for the new profile?')
-            if (name !== null) {
-              createProfile(name)
-              window.location.reload()
-            }
-          }}
-        >
-          + New profile
-        </button>
+        <div className="settings__row">
+          <button
+            className="btn btn--ghost"
+            onClick={() => {
+              const name = window.prompt('Name for the new profile?')
+              if (name !== null) {
+                createProfile(name)
+                window.location.reload()
+              }
+            }}
+          >
+            + New profile
+          </button>
+          <label className="btn btn--ghost import-label">
+            Import profile…
+            <input
+              type="file"
+              accept=".json,application/json"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                file.text().then((text) => {
+                  try {
+                    const profile = importProfile(JSON.parse(text))
+                    if (profile) {
+                      window.location.reload()
+                    } else {
+                      window.alert('That file is not a Blackjack Trainer profile export.')
+                    }
+                  } catch {
+                    window.alert('Could not read that file as a profile export.')
+                  }
+                })
+              }}
+            />
+          </label>
+        </div>
       </fieldset>
     </div>
   )

@@ -1,7 +1,7 @@
 # Checklist
 
 ## P0 — Required to work
-- [ ] [1h] Mobile layout QA sweep at 375–430px widths (table, rail, modals, Skills/Progress tables) and fix overflow issues found — milestone's definition of done
+- [x] [1h] Mobile layout QA sweep at 375–430px widths (table, rail, modals, Skills/Progress tables) and fix overflow issues found — milestone's definition of done
 - [ ] [45m] Verify Illustrious 18 / Fab 4 indices in `src/strategy/deviations.ts` against an H17-specific reference (e.g. current BJA/Schlesinger H17 tables); adjust thresholds + boundary tests to match — chart correctness is a must-never-break invariant and training targets real casino play
 
 ## P1 — Good ideas

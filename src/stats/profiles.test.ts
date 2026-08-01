@@ -6,6 +6,8 @@ import {
   switchProfile,
   renameProfile,
   deleteProfile,
+  exportProfile,
+  importProfile,
   loadStats,
   saveStats,
   loadPersisted,
@@ -102,5 +104,26 @@ describe('profile registry', () => {
     const profiles = getProfiles()
     expect(profiles).toHaveLength(1)
     expect(profiles[0].id).not.toBe(only.id)
+  })
+
+  it('export/import round-trips a profile into a new browser', () => {
+    saveStats({ ...emptyStats(), handsPlayed: 55 })
+    savePersisted({ buyIn: 800 })
+    const exported = exportProfile(getActiveProfile().id)!
+    expect(exported.format).toBe('bjt-profile')
+
+    // simulate a different browser: wipe everything, then import
+    store.clear()
+    const imported = importProfile(JSON.parse(JSON.stringify(exported)))
+    expect(imported?.name).toBe('Player 1')
+    expect(getActiveProfile().id).toBe(imported!.id)
+    expect(loadStats().handsPlayed).toBe(55)
+    expect(loadPersisted({ buyIn: 500 }).buyIn).toBe(800)
+  })
+
+  it('import rejects malformed files', () => {
+    expect(importProfile({ hello: 'world' })).toBe(null)
+    expect(importProfile(null)).toBe(null)
+    expect(getProfiles()).toHaveLength(1) // no junk profile created
   })
 })

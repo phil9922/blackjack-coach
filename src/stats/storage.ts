@@ -121,6 +121,52 @@ export function deleteProfile(id: string): void {
   saveRegistry({ activeId, profiles })
 }
 
+// --- profile export / import ------------------------------------------------
+
+export interface ProfileExport {
+  format: 'bjt-profile'
+  version: 1
+  name: string
+  exportedAt: number
+  stats: unknown
+  settings: unknown
+}
+
+export function exportProfile(id: string): ProfileExport | null {
+  const profile = loadRegistry().profiles.find((p) => p.id === id)
+  if (!profile) return null
+  try {
+    const stats = localStorage.getItem(statsKey(id))
+    const settings = localStorage.getItem(settingsKey(id))
+    return {
+      format: 'bjt-profile',
+      version: 1,
+      name: profile.name,
+      exportedAt: Date.now(),
+      stats: stats ? JSON.parse(stats) : null,
+      settings: settings ? JSON.parse(settings) : null,
+    }
+  } catch {
+    return null
+  }
+}
+
+/** Creates (and activates) a new profile from an export. Null if malformed. */
+export function importProfile(data: unknown): Profile | null {
+  const d = data as ProfileExport
+  if (!d || d.format !== 'bjt-profile' || d.version !== 1 || typeof d.name !== 'string') {
+    return null
+  }
+  const profile = createProfile(d.name)
+  try {
+    if (d.stats) localStorage.setItem(statsKey(profile.id), JSON.stringify(d.stats))
+    if (d.settings) localStorage.setItem(settingsKey(profile.id), JSON.stringify(d.settings))
+  } catch {
+    /* profile exists with whatever data made it in */
+  }
+  return profile
+}
+
 // --- per-profile stats ------------------------------------------------------
 
 export function loadStats(): StatsState {
