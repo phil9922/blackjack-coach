@@ -13,9 +13,9 @@ None. Note: port 5173 is occupied by an unrelated app on this machine — always
 `npm run dev -- --port 5199 --strictPort` and point tests at :5199.
 
 ## Next step
-All P0s and P1s are done. Only P2 extras remain — the most useful is probably the count
-speed-drill mini-game (~1.5h) or "even money" wording for blackjack vs a dealer ace (~30m).
-Nothing is blocking; the app is complete and usable as-is.
+All P0s and P1s are done, plus most P2s. Only two extras remain: alternative counting systems
+(~2h — note deviation indices are Hi-Lo-specific, so a second system needs its own verified
+indices or must disable deviation grading) and sound effects (~1h). Nothing is blocking.
 
 ## Open questions
 - Should drill mode also construct high-true-count scenarios to practice deviations (currently it

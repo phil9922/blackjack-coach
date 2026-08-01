@@ -14,6 +14,7 @@ import { hintFor, type Hint } from '../strategy/hint'
 import type { StatsApi } from '../hooks/useStats'
 import { coachTips, type CoachTip } from '../stats/coach'
 import { buildDrillPlan } from '../drill/planner'
+import { sfx, setSoundEnabled } from '../audio/sfx'
 import type { Action } from '../strategy/types'
 
 export function GameScreen({
@@ -33,6 +34,36 @@ export function GameScreen({
   const prevLevels = useRef<Record<string, number> | null>(null)
   const prevBadges = useRef<Set<string> | null>(null)
 
+  useEffect(() => {
+    setSoundEnabled(state.settings.soundEnabled)
+  }, [state.settings.soundEnabled])
+
+  // Card sounds follow the shoe, so AI and dealer draws are audible too.
+  const prevCards = useRef(state.nextCard)
+  useEffect(() => {
+    if (state.nextCard > prevCards.current) sfx('card')
+    prevCards.current = state.nextCard
+  }, [state.nextCard])
+
+  // Verdict chime.
+  const prevGrade = useRef(0)
+  useEffect(() => {
+    if (state.gradeSeq > prevGrade.current) {
+      prevGrade.current = state.gradeSeq
+      if (state.lastGrade) sfx(state.lastGrade.wasCorrect ? 'correct' : 'miss')
+    }
+  }, [state.gradeSeq, state.lastGrade])
+
+  // Chips on a winning round.
+  const prevSettled = useRef(0)
+  useEffect(() => {
+    if (state.phase === 'roundOver' && state.handsPlayed > prevSettled.current) {
+      prevSettled.current = state.handsPlayed
+      const net = state.roundResults?.filter((r) => r.isUser).reduce((s, r) => s + r.net, 0) ?? 0
+      if (net > 0) sfx('chip')
+    }
+  }, [state.phase, state.handsPlayed, state.roundResults])
+
   // Level-up notices: compare each skill's level against the previous render.
   useEffect(() => {
     const levels: Record<string, number> = {}
@@ -42,6 +73,7 @@ export function GameScreen({
         if (levels[sk.id] > (prevLevels.current[sk.id] ?? 1)) {
           const lvl = skillLevel(stats.stats.skillXp[sk.id] ?? 0)
           setNotice({ kind: 'levelup', text: `${sk.name} is now ${lvl.title} (level ${lvl.level})` })
+          sfx('levelup')
         }
       }
     }
@@ -55,7 +87,10 @@ export function GameScreen({
       for (const id of ids) {
         if (!prevBadges.current.has(id)) {
           const meta = ACHIEVEMENTS.find((a) => a.id === id)
-          if (meta) setNotice({ kind: 'badge', text: `${meta.glyph} ${meta.name} — ${meta.description}` })
+          if (meta) {
+            setNotice({ kind: 'badge', text: `${meta.glyph} ${meta.name} — ${meta.description}` })
+            sfx('levelup')
+          }
         }
       }
     }

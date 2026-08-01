@@ -131,6 +131,16 @@ export function SettingsScreen({
             Drill mode <em>(the trainer learns your trouble spots and deals them more often — see the Progress tab for what it's currently targeting)</em>
           </span>
         </label>
+        <label className="settings__row settings__row--check">
+          <input
+            type="checkbox"
+            checked={settings.soundEnabled}
+            onChange={(e) => setSettings({ ...settings, soundEnabled: e.target.checked })}
+          />
+          <span>
+            Table sounds <em>(cards, chips, and a chime on each verdict)</em>
+          </span>
+        </label>
         <label className="settings__row">
           <span>Count quiz frequency</span>
           <select

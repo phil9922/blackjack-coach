@@ -37,6 +37,7 @@ export interface Settings {
   aiSeats: AiSeatConfig[]
   /** drill mode: deal the user's trouble spots more often */
   drillMode: boolean
+  soundEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -46,6 +47,7 @@ export const DEFAULT_SETTINGS: Settings = {
   quizFrequency: 'normal',
   aiSeats: [],
   drillMode: false,
+  soundEnabled: false,
 }
 
 export interface Seat {

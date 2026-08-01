@@ -1,6 +1,10 @@
 # Log
 
 ## 2026-08-01
+- Even money + count speed drill (`e878c1f`): naturals vs a dealer ace now get the real even-money
+  offer and its own explanation (payout math was already equivalent to insurance, so this was
+  wording + grading only). Speed drill launches from the Keeping the Count skill card — real
+  shuffled deck, four tempos, XP scaled by tempo/length, tracks best pace, new Speed Counter badge.
 - Table animations (`30fbb4a`): hole-card 3D flip on reveal (card remounts on reveal so it
   re-fires), result-badge and net-payout pops, all off under prefers-reduced-motion. Verified by
   recording `animationstart` events rather than sampling, since the flip is shorter than a tick.
