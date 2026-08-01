@@ -18,6 +18,9 @@ export function FeedbackPanel({
   lastXp,
   notice,
   onDismissNotice,
+  aiAlert,
+  aiBusy,
+  onDismissAiAlert,
 }: {
   state: GameState
   dispatch: React.Dispatch<GameAction>
@@ -27,6 +30,9 @@ export function FeedbackPanel({
   lastXp: XpEvent | null
   notice: GamifyNotice | null
   onDismissNotice: () => void
+  aiAlert: string | null
+  aiBusy: boolean
+  onDismissAiAlert: () => void
 }) {
   const grade = state.lastGrade
   const xpSkill = lastXp ? SKILL_BY_ID[lastXp.skill as SkillId] : null
@@ -68,6 +74,21 @@ export function FeedbackPanel({
           Play a hand. Every decision you make gets graded against the book here — with the why,
           not just the what.
         </p>
+      )}
+
+      {aiAlert && (
+        <div className="verdict verdict--ai">
+          <span className="verdict__stamp">PATTERN</span>
+          <h3 className="verdict__headline">Your coach noticed something</h3>
+          <p className="verdict__body">{aiAlert}</p>
+          <button className="btn btn--ghost" onClick={onDismissAiAlert}>
+            Got it
+          </button>
+        </div>
+      )}
+
+      {aiBusy && !aiAlert && (
+        <p className="rail__working">Coach is reviewing your last few hands…</p>
       )}
 
       {notice && (

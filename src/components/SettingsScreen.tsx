@@ -217,6 +217,24 @@ export function SettingsScreen({
             autoComplete="off"
           />
         </label>
+        <label className="settings__row">
+          <span>Live coaching</span>
+          <select
+            value={settings.liveCoach}
+            onChange={(e) =>
+              setSettings({ ...settings, liveCoach: e.target.value as Settings['liveCoach'] })
+            }
+          >
+            <option value="off">Off — only when I ask</option>
+            <option value="normal">On — review every ~15 hands</option>
+            <option value="often">Often — review every ~8 hands</option>
+          </select>
+        </label>
+        <p className="settings__fixed">
+          When live coaching is on, the coach reviews your record between hands and interrupts only
+          when it spots a new pattern worth telling you about. Each review is one API call billed to
+          your key, so &ldquo;often&rdquo; costs roughly twice what &ldquo;on&rdquo; does.
+        </p>
         <div className="settings__row">
           <button
             className="btn btn--ghost"

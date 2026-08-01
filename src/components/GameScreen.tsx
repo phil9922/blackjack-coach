@@ -15,16 +15,19 @@ import type { StatsApi } from '../hooks/useStats'
 import { coachTips, type CoachTip } from '../stats/coach'
 import { buildDrillPlan } from '../drill/planner'
 import { sfx, setSoundEnabled } from '../audio/sfx'
+import type { AiCoachApi } from '../hooks/useAiCoach'
 import type { Action } from '../strategy/types'
 
 export function GameScreen({
   state,
   dispatch,
   stats,
+  coach,
 }: {
   state: GameState
   dispatch: React.Dispatch<GameAction>
   stats: StatsApi
+  coach: AiCoachApi
 }) {
   const [hint, setHint] = useState<Hint | null>(null)
   const [coachTip, setCoachTip] = useState<CoachTip | null>(null)
@@ -320,6 +323,9 @@ export function GameScreen({
         lastXp={stats.stats.lastXp}
         notice={notice}
         onDismissNotice={() => setNotice(null)}
+        aiAlert={coach.alert}
+        aiBusy={coach.busy}
+        onDismissAiAlert={coach.dismissAlert}
       />
 
       {state.phase === 'countQuiz' && <CountQuizModal dispatch={dispatch} />}

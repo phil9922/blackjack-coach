@@ -35,6 +35,7 @@ export interface StatsApi {
   recordSpeedDrill: (score: { correct: boolean; xp: number; pace: number }) => void
   recordBetAdvice: (followed: boolean, mode: TrainingMode) => void
   recordBankroll: (value: number) => void
+  saveAiCoach: (coach: StatsState['aiCoach']) => void
   reset: () => void
 }
 
@@ -186,6 +187,13 @@ export function useStats(): StatsApi {
     [update]
   )
 
+  const saveAiCoach = useCallback(
+    (coach: StatsState['aiCoach']) => {
+      update((s) => ({ ...s, aiCoach: coach }))
+    },
+    [update]
+  )
+
   const reset = useCallback(() => {
     resetStats()
     setStats(loadStats())
@@ -200,6 +208,7 @@ export function useStats(): StatsApi {
       recordSpeedDrill,
       recordBetAdvice,
       recordBankroll,
+      saveAiCoach,
       reset,
     }),
     [
@@ -210,6 +219,7 @@ export function useStats(): StatsApi {
       recordSpeedDrill,
       recordBetAdvice,
       recordBankroll,
+      saveAiCoach,
       reset,
     ]
   )

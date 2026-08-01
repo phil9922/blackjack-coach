@@ -38,6 +38,8 @@ export interface Settings {
   /** drill mode: deal the user's trouble spots more often */
   drillMode: boolean
   soundEnabled: boolean
+  /** live AI coaching cadence — needs a Claude API key */
+  liveCoach: 'off' | 'normal' | 'often'
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -48,6 +50,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiSeats: [],
   drillMode: false,
   soundEnabled: false,
+  liveCoach: 'off',
 }
 
 export interface Seat {

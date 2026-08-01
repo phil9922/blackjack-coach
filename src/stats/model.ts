@@ -55,6 +55,17 @@ export interface XpEvent {
   t: number
 }
 
+/** Structurally mirrors AiCoachState in coach-ai/live.ts (kept dependency-free here). */
+export interface StoredAiCoach {
+  updatedAt: number
+  handsAtLastRun: number
+  decisionsAtLastRun: number
+  doingWell: { title: string; detail: string }[]
+  needsWork: { title: string; detail: string }[]
+  tips: { title: string; detail: string }[]
+  alert: string
+}
+
 export interface StatsState {
   schemaVersion: 1
   decisions: DecisionRecord[]
@@ -71,6 +82,8 @@ export interface StatsState {
   achievements: Record<string, number>
   /** the most recent XP grant, for in-game display */
   lastXp: XpEvent | null
+  /** the live AI coach's running assessment, null until it first runs */
+  aiCoach: StoredAiCoach | null
 }
 
 export const DECISION_CAP = 1000
@@ -91,6 +104,7 @@ export function emptyStats(): StatsState {
     skillXp: {},
     achievements: {},
     lastXp: null,
+    aiCoach: null,
   }
 }
 

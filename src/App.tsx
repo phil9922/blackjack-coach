@@ -15,6 +15,7 @@ import {
   switchProfile,
 } from './stats/storage'
 import { playerRank } from './gamify/skills'
+import { useAiCoach } from './hooks/useAiCoach'
 
 type Screen = 'table' | 'skills' | 'stats' | 'progress' | 'settings'
 
@@ -30,6 +31,7 @@ export default function App() {
   const stats = useStats()
   const [state, dispatch] = useGame(stats)
   const [screen, setScreen] = useState<Screen>('table')
+  const coach = useAiCoach(state, stats)
   const [profiles] = useState(getProfiles)
   const [activeProfile] = useState(getActiveProfile)
 
@@ -140,12 +142,16 @@ export default function App() {
       </header>
 
       <main className="main">
-        {screen === 'table' && <GameScreen state={state} dispatch={dispatch} stats={stats} />}
+        {screen === 'table' && (
+          <GameScreen state={state} dispatch={dispatch} stats={stats} coach={coach} />
+        )}
         {screen === 'skills' && <SkillsScreen stats={stats} mode={mode} />}
         {screen === 'stats' && (
           <StatsScreen stats={stats} bankroll={state.userBankroll} totalBuyIn={state.totalBuyIn} />
         )}
-        {screen === 'progress' && <ProgressScreen stats={stats} state={state} dispatch={dispatch} />}
+        {screen === 'progress' && (
+          <ProgressScreen stats={stats} state={state} dispatch={dispatch} coach={coach} />
+        )}
         {screen === 'settings' && <SettingsScreen state={state} dispatch={dispatch} />}
       </main>
     </div>

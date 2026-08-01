@@ -5,6 +5,7 @@ import { deriveSessions } from '../stats/sessions'
 import { buildDrillPlan, drillTargets } from '../drill/planner'
 import { savePersisted } from '../stats/storage'
 import { AiCoachPanel } from './AiCoachPanel'
+import type { AiCoachApi } from '../hooks/useAiCoach'
 
 function fmtDate(t: number): string {
   return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -18,10 +19,12 @@ export function ProgressScreen({
   stats,
   state,
   dispatch,
+  coach,
 }: {
   stats: StatsApi
   state: GameState
   dispatch: React.Dispatch<GameAction>
+  coach: AiCoachApi
 }) {
   const report = coachReport(stats.stats)
   const strong = strengths(stats.stats)
@@ -97,9 +100,11 @@ export function ProgressScreen({
 
       <AiCoachPanel
         stats={stats.stats}
+        coach={coach}
         mode={settings.mode}
         bankroll={state.userBankroll}
         totalBuyIn={state.totalBuyIn}
+        liveFrequency={settings.liveCoach}
       />
 
       <section className={`panel panel--drill ${settings.drillMode ? 'is-on' : ''}`}>
