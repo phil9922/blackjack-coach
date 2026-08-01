@@ -10,7 +10,15 @@ export function loadStats(): StatsState {
     if (!raw) return emptyStats()
     const parsed = JSON.parse(raw)
     if (parsed?.schemaVersion !== 1) return emptyStats()
-    return { ...emptyStats(), ...parsed }
+    const empty = emptyStats()
+    return {
+      ...empty,
+      ...parsed,
+      // nested records need their own merge so saves from older versions
+      // pick up newly added fields
+      skillXp: { ...empty.skillXp, ...(parsed.skillXp ?? {}) },
+      achievements: { ...empty.achievements, ...(parsed.achievements ?? {}) },
+    }
   } catch {
     return emptyStats()
   }

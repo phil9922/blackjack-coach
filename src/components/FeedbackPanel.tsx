@@ -1,6 +1,13 @@
 import type { GameState, GameAction } from '../engine/game'
 import type { Hint } from '../strategy/hint'
 import type { CoachTip } from '../stats/coach'
+import type { XpEvent } from '../stats/model'
+import { SKILL_BY_ID, type SkillId } from '../gamify/skills'
+
+export interface GamifyNotice {
+  kind: 'levelup' | 'badge'
+  text: string
+}
 
 export function FeedbackPanel({
   state,
@@ -8,14 +15,21 @@ export function FeedbackPanel({
   hint,
   coachTip,
   onDismissTip,
+  lastXp,
+  notice,
+  onDismissNotice,
 }: {
   state: GameState
   dispatch: React.Dispatch<GameAction>
   hint: Hint | null
   coachTip: CoachTip | null
   onDismissTip: () => void
+  lastXp: XpEvent | null
+  notice: GamifyNotice | null
+  onDismissNotice: () => void
 }) {
   const grade = state.lastGrade
+  const xpSkill = lastXp ? SKILL_BY_ID[lastXp.skill as SkillId] : null
 
   return (
     <aside className="rail" aria-label="Coaching">
@@ -35,6 +49,11 @@ export function FeedbackPanel({
           <span className="verdict__stamp">{grade.wasCorrect ? 'BOOK' : 'MISS'}</span>
           <h3 className="verdict__headline">{grade.explanation.headline}</h3>
           <p className="verdict__body">{grade.explanation.body}</p>
+          {lastXp && xpSkill && (
+            <span className="verdict__xp">
+              +{lastXp.amount} XP · {xpSkill.name}
+            </span>
+          )}
           {grade.hinted && <p className="verdict__note">Assisted (hint used) — not counted.</p>}
           {state.awaitingAck && (
             <button className="btn btn--primary" onClick={() => dispatch({ type: 'ACKNOWLEDGE' })}>
@@ -49,6 +68,16 @@ export function FeedbackPanel({
           Play a hand. Every decision you make gets graded against the book here — with the why,
           not just the what.
         </p>
+      )}
+
+      {notice && (
+        <div className="verdict verdict--gamify">
+          <span className="verdict__stamp">{notice.kind === 'levelup' ? 'LEVEL UP' : 'BADGE'}</span>
+          <h3 className="verdict__headline">{notice.text}</h3>
+          <button className="btn btn--ghost" onClick={onDismissNotice}>
+            Nice
+          </button>
+        </div>
       )}
 
       {coachTip && (

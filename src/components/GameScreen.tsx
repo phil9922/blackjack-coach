@@ -6,8 +6,10 @@ import { CardView } from './CardView'
 import { SeatView } from './SeatView'
 import { Controls } from './Controls'
 import { BetControls } from './BetControls'
-import { FeedbackPanel } from './FeedbackPanel'
+import { FeedbackPanel, type GamifyNotice } from './FeedbackPanel'
 import { CountQuizModal } from './CountQuizModal'
+import { SKILLS, skillLevel } from '../gamify/skills'
+import { ACHIEVEMENTS } from '../gamify/achievements'
 import { hintFor, type Hint } from '../strategy/hint'
 import type { StatsApi } from '../hooks/useStats'
 import { coachTips, type CoachTip } from '../stats/coach'
@@ -25,8 +27,40 @@ export function GameScreen({
 }) {
   const [hint, setHint] = useState<Hint | null>(null)
   const [coachTip, setCoachTip] = useState<CoachTip | null>(null)
+  const [notice, setNotice] = useState<GamifyNotice | null>(null)
   const lastCoachAt = useRef(0)
   const shownTips = useRef<Set<string>>(new Set())
+  const prevLevels = useRef<Record<string, number> | null>(null)
+  const prevBadges = useRef<Set<string> | null>(null)
+
+  // Level-up notices: compare each skill's level against the previous render.
+  useEffect(() => {
+    const levels: Record<string, number> = {}
+    for (const sk of SKILLS) levels[sk.id] = skillLevel(stats.stats.skillXp[sk.id] ?? 0).level
+    if (prevLevels.current) {
+      for (const sk of SKILLS) {
+        if (levels[sk.id] > (prevLevels.current[sk.id] ?? 1)) {
+          const lvl = skillLevel(stats.stats.skillXp[sk.id] ?? 0)
+          setNotice({ kind: 'levelup', text: `${sk.name} is now ${lvl.title} (level ${lvl.level})` })
+        }
+      }
+    }
+    prevLevels.current = levels
+  }, [stats.stats.skillXp])
+
+  // Badge notices: any newly unlocked achievement.
+  useEffect(() => {
+    const ids = new Set(Object.keys(stats.stats.achievements))
+    if (prevBadges.current) {
+      for (const id of ids) {
+        if (!prevBadges.current.has(id)) {
+          const meta = ACHIEVEMENTS.find((a) => a.id === id)
+          if (meta) setNotice({ kind: 'badge', text: `${meta.glyph} ${meta.name} — ${meta.description}` })
+        }
+      }
+    }
+    prevBadges.current = ids
+  }, [stats.stats.achievements])
 
   const isUserTurn = state.phase === 'seatTurn' && activeSeat(state)?.kind === 'user'
 
@@ -80,7 +114,7 @@ export function GameScreen({
   }
 
   const onDeal = (amount: number, advised: number) => {
-    stats.recordBetAdvice(Math.abs(amount - advised) <= state.rules.tableMin / 2)
+    stats.recordBetAdvice(Math.abs(amount - advised) <= state.rules.tableMin / 2, state.settings.mode)
     const drill = state.settings.drillMode ? buildDrillPlan(stats.stats) : undefined
     dispatch({ type: 'PLACE_BET_AND_DEAL', amount, drill })
   }
@@ -186,6 +220,9 @@ export function GameScreen({
         hint={hint}
         coachTip={coachTip}
         onDismissTip={() => setCoachTip(null)}
+        lastXp={stats.stats.lastXp}
+        notice={notice}
+        onDismissNotice={() => setNotice(null)}
       />
 
       {state.phase === 'countQuiz' && <CountQuizModal dispatch={dispatch} />}

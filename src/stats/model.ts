@@ -42,6 +42,12 @@ export interface BetAdviceStats {
   followed: number
 }
 
+export interface XpEvent {
+  skill: string
+  amount: number
+  t: number
+}
+
 export interface StatsState {
   schemaVersion: 1
   decisions: DecisionRecord[]
@@ -51,6 +57,12 @@ export interface StatsState {
   betAdvice: BetAdviceStats
   bankrollHistory: number[]
   handsPlayed: number
+  /** lifetime XP per skill id — accumulates independently of the ring buffers */
+  skillXp: Record<string, number>
+  /** unlocked achievement id -> unlock timestamp */
+  achievements: Record<string, number>
+  /** the most recent XP grant, for in-game display */
+  lastXp: XpEvent | null
 }
 
 export const DECISION_CAP = 1000
@@ -67,6 +79,9 @@ export function emptyStats(): StatsState {
     betAdvice: { rounds: 0, followed: 0 },
     bankrollHistory: [],
     handsPlayed: 0,
+    skillXp: {},
+    achievements: {},
+    lastXp: null,
   }
 }
 

@@ -4,11 +4,21 @@ import { useGame } from './hooks/useGame'
 import { GameScreen } from './components/GameScreen'
 import { StatsScreen } from './components/StatsScreen'
 import { ProgressScreen } from './components/ProgressScreen'
+import { SkillsScreen } from './components/SkillsScreen'
 import { SettingsScreen } from './components/SettingsScreen'
 import type { TrainingMode } from './engine/types'
 import { savePersisted } from './stats/storage'
+import { playerRank } from './gamify/skills'
 
-type Screen = 'table' | 'stats' | 'progress' | 'settings'
+type Screen = 'table' | 'skills' | 'stats' | 'progress' | 'settings'
+
+const SCREEN_LABELS: Record<Screen, string> = {
+  table: 'Table',
+  skills: 'Skills',
+  stats: 'Stats',
+  progress: 'Progress',
+  settings: 'Settings',
+}
 
 export default function App() {
   const stats = useStats()
@@ -66,16 +76,24 @@ export default function App() {
         </button>
 
         <nav className="tabs" aria-label="Screens">
-          {(['table', 'stats', 'progress', 'settings'] as Screen[]).map((s) => (
+          {(Object.keys(SCREEN_LABELS) as Screen[]).map((s) => (
             <button
               key={s}
               className={`tabs__tab ${screen === s ? 'is-on' : ''}`}
               onClick={() => setScreen(s)}
             >
-              {s === 'table' ? 'Table' : s === 'stats' ? 'Stats' : s === 'progress' ? 'Progress' : 'Settings'}
+              {SCREEN_LABELS[s]}
             </button>
           ))}
         </nav>
+
+        <button
+          className="rank-chip"
+          title="Your player rank — click for the skill breakdown"
+          onClick={() => setScreen('skills')}
+        >
+          {playerRank(stats.stats.skillXp).title}
+        </button>
 
         <div className="bankroll" title="Bankroll (net vs total buy-in)">
           <span className="bankroll__amount">${state.userBankroll}</span>
@@ -87,6 +105,7 @@ export default function App() {
 
       <main className="main">
         {screen === 'table' && <GameScreen state={state} dispatch={dispatch} stats={stats} />}
+        {screen === 'skills' && <SkillsScreen stats={stats} mode={mode} />}
         {screen === 'stats' && (
           <StatsScreen stats={stats} bankroll={state.userBankroll} totalBuyIn={state.totalBuyIn} />
         )}
