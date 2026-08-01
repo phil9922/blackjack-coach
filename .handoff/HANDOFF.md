@@ -13,9 +13,11 @@ None. Note: port 5173 is occupied by an unrelated app on this machine — always
 `npm run dev -- --port 5199 --strictPort` and point tests at :5199.
 
 ## Next step
-All P0s and P1s are done, plus most P2s. Only two extras remain: alternative counting systems
-(~2h — note deviation indices are Hi-Lo-specific, so a second system needs its own verified
-indices or must disable deviation grading) and sound effects (~1h). Nothing is blocking.
+Everything on the checklist is done except two deliberately-deferred extras: alternative counting
+systems (~2h — deviation indices are Hi-Lo-specific, so a second system needs its own verified
+indices or must disable deviation grading while selected) and cloud profile sync (~4h, needs a
+backend, which the client-side-only design rules out for now). Nothing is blocking; the app is
+complete. Next real work should come from actually using it at a table.
 
 ## Open questions
 - Should drill mode also construct high-true-count scenarios to practice deviations (currently it

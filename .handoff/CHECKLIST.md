@@ -13,5 +13,5 @@
 - [x] [30m] Offer "even money" wording when the player has blackjack vs a dealer ace (currently shows the generic insurance prompt)
 - [ ] [2h] Additional counting systems (KO, Hi-Opt I) selectable in settings, with matching true-count handling — NOTE: deviation indices are Hi-Lo-specific, so a second system must either ship its own verified indices or disable deviation grading while selected
 - [x] [1.5h] Count speed-drill mini-game: flash a stream of cards, answer the running count at the end
-- [ ] [1h] Sound effects for deal/verdict/level-up with a mute toggle
+- [x] [1h] Sound effects for deal/verdict/level-up with a mute toggle
 - [ ] [4h] Cloud sync for profiles (needs a backend — out of scope for localStorage-only design)

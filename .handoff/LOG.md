@@ -1,6 +1,9 @@
 # Log
 
 ## 2026-08-01
+- Table sounds (`c1a939b`): Web Audio oscillator voices (card, chip, correct, miss, level-up), no
+  asset files, off by default, toggle in Settings. Verified by spying on createOscillator — silent
+  by default, audible once enabled. Full E2E regression re-run: 32 checks green.
 - Even money + count speed drill (`e878c1f`): naturals vs a dealer ace now get the real even-money
   offer and its own explanation (payout math was already equivalent to insurance, so this was
   wording + grading only). Speed drill launches from the Keeping the Count skill card — real
