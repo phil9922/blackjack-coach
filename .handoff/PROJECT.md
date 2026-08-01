@@ -69,3 +69,8 @@ using it at a table.
   says so in the UI, rather than borrowing Hi-Lo's indices. An index number belongs to the system it
   was computed for; reusing one would silently teach a wrong play, which is the failure this project
   exists to prevent. `supportsDeviations` in `src/counting/systems.ts` is that switch.
+- 2026-08-01 — Tests that cost money are opt-in and never part of `npm test`. Loading `.env` into
+  the Vitest environment silently turned every `npm test` into four billed API calls; the live coach
+  check now needs `COACH_LIVE=1` (via `npm run test:coach`) on top of a key. The offline guarantee
+  covers the test suite, not just the app.
+

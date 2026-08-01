@@ -22,6 +22,9 @@
   the running count always equals the IRC plus exactly the face-up cards, for all three systems.
   Both new test groups were mutation-checked (broke a tag value, then the hole-card rule) to
   confirm they actually bite.
+- Documented the paid-test setup in the README: corrected the stale `npm test  # 198 tests` line to
+  224, added `npm run test:coach`, and wrote down the `.env` / `ANTHROPIC_API_KEY` contract
+  including why an API key must never carry a `VITE_` prefix (Vite inlines those into `dist/`).
 - **Verified the AI coach against the live API** — the last open item. Quality is strong and the
   prompts needed no changes: the on-demand read headed a section *"The soft hands are one leak, not
   eight"*, named the instinct (*"treating the ace as insurance instead of leverage"*), caught the

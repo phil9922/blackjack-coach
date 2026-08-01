@@ -79,9 +79,22 @@ npm run dev
 Then open the URL Vite prints. No backend, no accounts, no build config to touch — everything is stored in your browser.
 
 ```bash
-npm test        # 198 tests
-npm run build   # typecheck + production build
+npm test              # 224 tests, fully offline — no API calls, no key needed
+npm run build         # typecheck + production build
+npm run test:coach    # optional: checks the AI coach against the real API (costs money)
 ```
+
+`npm run test:coach` is the only thing here that spends anything. It needs a Claude API key in a
+`.env` file at the project root:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+That file is gitignored, and it is loaded into the test environment only — never into client code,
+so it cannot be inlined into the production bundle. Never give an API key a `VITE_` prefix; Vite
+bakes those into `dist/`. `npm test` stays offline whether or not the file exists — the live check
+also requires `COACH_LIVE=1`, which the script sets.
 
 ---
 
