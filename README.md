@@ -109,3 +109,9 @@ Nothing in the logic layers imports React, so all of it is testable without a DO
 ## Not included
 
 No cloud sync — profiles live in one browser. No real-money anything. No claim that this makes you a winning player: basic strategy makes you a *break-even-ish* player, and counting is hard, slow work that this app can only practice, not perform for you.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
