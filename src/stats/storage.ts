@@ -183,6 +183,7 @@ export function loadStats(): StatsState {
       // pick up newly added fields
       skillXp: { ...empty.skillXp, ...(parsed.skillXp ?? {}) },
       achievements: { ...empty.achievements, ...(parsed.achievements ?? {}) },
+      speedDrills: { ...empty.speedDrills, ...(parsed.speedDrills ?? {}) },
     }
   } catch {
     return emptyStats()

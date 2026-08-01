@@ -42,6 +42,13 @@ export interface BetAdviceStats {
   followed: number
 }
 
+export interface SpeedDrillStats {
+  runs: number
+  correct: number
+  /** fastest pace (cards/minute) counted correctly */
+  bestPace: number
+}
+
 export interface XpEvent {
   skill: string
   amount: number
@@ -55,6 +62,7 @@ export interface StatsState {
   streak: { current: number; best: number }
   countQuizzes: QuizStats
   betAdvice: BetAdviceStats
+  speedDrills: SpeedDrillStats
   bankrollHistory: number[]
   handsPlayed: number
   /** lifetime XP per skill id — accumulates independently of the ring buffers */
@@ -77,6 +85,7 @@ export function emptyStats(): StatsState {
     streak: { current: 0, best: 0 },
     countQuizzes: { asked: 0, rcCorrect: 0, tcCorrect: 0 },
     betAdvice: { rounds: 0, followed: 0 },
+    speedDrills: { runs: 0, correct: 0, bestPace: 0 },
     bankrollHistory: [],
     handsPlayed: 0,
     skillXp: {},

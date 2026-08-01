@@ -148,19 +148,32 @@ export function explainDecision(
   return { headline, body }
 }
 
+const EVEN_MONEY_BODY =
+  'Even money is insurance wearing a disguise. The dealer offers you a guaranteed 1:1 instead of ' +
+  'your 3:2 blackjack, framed as "why risk a push?" — but taking it is arithmetically identical to ' +
+  'insuring your natural, and it carries the same ~7.7% cost per dollar. Decline and your blackjack ' +
+  'is worth about 1.04 bets on average (you win 3:2 whenever the dealer does not have blackjack, ' +
+  'which is most of the time); take it and you lock in exactly 1.00. The guarantee feels good and ' +
+  'costs you money. Only a counter with a true count of +3 or better should ever accept.'
+
 export function explainInsurance(
   took: boolean,
   correctTake: boolean,
   mode: 'basic' | 'counting',
-  trueCount: number
+  trueCount: number,
+  evenMoney = false
 ): Explanation {
   const wasCorrect = took === correctTake
   const headline = wasCorrect
-    ? `Correct — ${correctTake ? 'insurance pays here' : 'never take insurance'}`
+    ? evenMoney
+      ? `Correct — ${correctTake ? 'take the even money here' : 'let the blackjack ride'}`
+      : `Correct — ${correctTake ? 'insurance pays here' : 'never take insurance'}`
     : correctTake
-      ? 'Mistake — this is the rare spot where insurance is right'
-      : 'Mistake — insurance is a losing side bet'
-  let body = CURATED['insurance']
+      ? `Mistake — this is the rare spot where ${evenMoney ? 'even money' : 'insurance'} is right`
+      : evenMoney
+        ? 'Mistake — even money is insurance in disguise'
+        : 'Mistake — insurance is a losing side bet'
+  let body = evenMoney ? EVEN_MONEY_BODY : CURATED['insurance']
   if (mode === 'counting') {
     body +=
       trueCount >= 3

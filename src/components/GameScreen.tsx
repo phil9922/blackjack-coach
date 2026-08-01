@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GameState, GameAction } from '../engine/game'
-import { activeSeat, currentTrueCount, cardsRemaining, userSeat } from '../engine/game'
+import { activeSeat, currentTrueCount, cardsRemaining, userSeat, isEvenMoneyOffer } from '../engine/game'
 import { evaluateHand } from '../engine/hand'
 import { CardView } from './CardView'
 import { SeatView } from './SeatView'
@@ -157,6 +157,8 @@ export function GameScreen({
     ?.filter((r) => r.isUser)
     .reduce((s, r) => s + r.net, 0)
 
+  const evenMoney = isEvenMoneyOffer(state)
+
   return (
     <div className="game">
       <div className="table" data-phase={state.phase}>
@@ -236,13 +238,19 @@ export function GameScreen({
           )}
 
           {state.phase === 'insurance' && userSeat(state).insurance === null && (
-            <div className="insurance" role="group" aria-label="Insurance">
-              <p className="insurance__ask">Dealer shows an ace. Insurance?</p>
+            <div className="insurance" role="group" aria-label={evenMoney ? 'Even money' : 'Insurance'}>
+              <p className="insurance__ask">
+                {evenMoney
+                  ? 'Blackjack! Dealer shows an ace — take even money?'
+                  : 'Dealer shows an ace. Insurance?'}
+              </p>
               <button className="btn btn--action" onClick={() => dispatch({ type: 'INSURANCE', take: true })}>
-                Take insurance (${userSeat(state).hands[0].bet / 2})
+                {evenMoney
+                  ? `Take even money ($${userSeat(state).hands[0].bet})`
+                  : `Take insurance ($${userSeat(state).hands[0].bet / 2})`}
               </button>
               <button className="btn btn--action" onClick={() => dispatch({ type: 'INSURANCE', take: false })}>
-                No insurance
+                {evenMoney ? 'Let it ride' : 'No insurance'}
               </button>
             </div>
           )}

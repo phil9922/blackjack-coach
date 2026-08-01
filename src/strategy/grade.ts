@@ -40,7 +40,9 @@ export function gradeDecision(input: GradeInput): GradedDecision {
 export function gradeInsurance(
   took: boolean,
   mode: TrainingMode,
-  trueCount: number
+  trueCount: number,
+  /** the player holds a natural, so this was offered as "even money" */
+  evenMoney = false
 ): GradedDecision {
   const correctTake = mode === 'counting' && trueCount >= INSURANCE_INDEX
   return {
@@ -53,6 +55,6 @@ export function gradeInsurance(
     source: correctTake ? 'deviation' : 'basic',
     trueCountAtDecision: mode === 'counting' ? trueCount : undefined,
     hinted: false,
-    explanation: explainInsurance(took, correctTake, mode, trueCount),
+    explanation: explainInsurance(took, correctTake, mode, trueCount, evenMoney),
   }
 }

@@ -1391,6 +1391,116 @@ select:focus-visible {
   margin: 0;
 }
 
+.skill-card__practice {
+  margin-top: 10px;
+  align-self: flex-start;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
+/* --- speed drill ------------------------------------------------------------- */
+
+.modal--drill {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.speed-picker {
+  border: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 6px;
+}
+
+.speed-picker legend {
+  font-family: var(--display);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0 0 6px;
+}
+
+.speed-picker--row {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.speed-opt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.speed-opt.is-on {
+  border-color: var(--accent);
+  background: rgba(201, 162, 39, 0.12);
+}
+
+.speed-opt input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.speed-opt span {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.speed-run {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.speed-run__bar {
+  width: 100%;
+  height: 6px;
+  background: var(--paper-dim);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.speed-run__fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+.speed-run__card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 130px;
+}
+
+.speed-run__card .card {
+  transform: scale(1.5);
+}
+
+.speed-run__count {
+  font-family: var(--mono);
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.speed-result__xp {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
 .badge-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));

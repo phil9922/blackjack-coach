@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import type { StatsApi } from '../hooks/useStats'
 import type { TrainingMode } from '../engine/types'
 import { SKILLS, skillLevel, playerRank, skillForm } from '../gamify/skills'
 import { ACHIEVEMENTS } from '../gamify/achievements'
+import { SpeedDrillModal } from './SpeedDrillModal'
 
 export function SkillsScreen({ stats, mode }: { stats: StatsApi; mode: TrainingMode }) {
+  const [speedDrill, setSpeedDrill] = useState(false)
   const s = stats.stats
   const rank = playerRank(s.skillXp)
   const unlockedCount = Object.keys(s.achievements).length
@@ -54,16 +57,32 @@ export function SkillsScreen({ stats, mode }: { stats: StatsApi; mode: TrainingM
               </div>
               <p className="skill-card__desc">{skill.description}</p>
               <p className="skill-card__stats">
-                {dormant
-                  ? 'Switch to card counting mode to train this skill.'
-                  : form.pct !== null
-                    ? `${xp} XP · form ${form.pct}% over last ${form.windowSeen} · ${form.seen} lifetime plays`
-                    : `${xp} XP · no plays yet`}
+                {skill.id === 'count'
+                  ? `${xp} XP · ${s.speedDrills.correct}/${s.speedDrills.runs} speed drills${
+                      s.speedDrills.bestPace ? ` · best ${s.speedDrills.bestPace} cards/min` : ''
+                    }`
+                  : dormant
+                    ? 'Switch to card counting mode to train this skill.'
+                    : form.pct !== null
+                      ? `${xp} XP · form ${form.pct}% over last ${form.windowSeen} · ${form.seen} lifetime plays`
+                      : `${xp} XP · no plays yet`}
               </p>
+              {skill.id === 'count' && (
+                <button className="btn btn--ghost skill-card__practice" onClick={() => setSpeedDrill(true)}>
+                  Speed drill →
+                </button>
+              )}
             </section>
           )
         })}
       </div>
+
+      {speedDrill && (
+        <SpeedDrillModal
+          onClose={() => setSpeedDrill(false)}
+          onFinish={(score) => stats.recordSpeedDrill(score)}
+        />
+      )}
 
       <section className="panel">
         <h3 className="panel__title">

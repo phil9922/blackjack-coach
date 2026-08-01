@@ -32,6 +32,7 @@ export interface StatsApi {
   recordDecision: (grade: GradedDecision, mode: TrainingMode) => void
   recordOutcomes: (results: SettledHandRecord[], mode: TrainingMode) => void
   recordQuiz: (quiz: QuizResult) => void
+  recordSpeedDrill: (score: { correct: boolean; xp: number; pace: number }) => void
   recordBetAdvice: (followed: boolean, mode: TrainingMode) => void
   recordBankroll: (value: number) => void
   reset: () => void
@@ -164,6 +165,20 @@ export function useStats(): StatsApi {
     [update]
   )
 
+  const recordSpeedDrill = useCallback(
+    (score: { correct: boolean; xp: number; pace: number }) => {
+      update((s) => ({
+        ...addXp(s, 'count', score.xp),
+        speedDrills: {
+          runs: s.speedDrills.runs + 1,
+          correct: s.speedDrills.correct + (score.correct ? 1 : 0),
+          bestPace: score.correct ? Math.max(s.speedDrills.bestPace, score.pace) : s.speedDrills.bestPace,
+        },
+      }))
+    },
+    [update]
+  )
+
   const recordBankroll = useCallback(
     (value: number) => {
       update((s) => ({ ...s, bankrollHistory: pushCapped(s.bankrollHistory, value, BANKROLL_CAP) }))
@@ -177,7 +192,25 @@ export function useStats(): StatsApi {
   }, [])
 
   return useMemo(
-    () => ({ stats, recordDecision, recordOutcomes, recordQuiz, recordBetAdvice, recordBankroll, reset }),
-    [stats, recordDecision, recordOutcomes, recordQuiz, recordBetAdvice, recordBankroll, reset]
+    () => ({
+      stats,
+      recordDecision,
+      recordOutcomes,
+      recordQuiz,
+      recordSpeedDrill,
+      recordBetAdvice,
+      recordBankroll,
+      reset,
+    }),
+    [
+      stats,
+      recordDecision,
+      recordOutcomes,
+      recordQuiz,
+      recordSpeedDrill,
+      recordBetAdvice,
+      recordBankroll,
+      reset,
+    ]
   )
 }

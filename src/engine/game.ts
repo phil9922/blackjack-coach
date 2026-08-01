@@ -521,9 +521,22 @@ function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
   return startSeatTurns(s)
 }
 
+/** A natural against a dealer ace turns the insurance offer into "even money". */
+export function isEvenMoneyOffer(state: GameState): boolean {
+  const hand = userSeat(state).hands[0]
+  return (
+    state.phase === 'insurance' && !!hand && isBlackjack(hand.cards, hand.isSplitHand)
+  )
+}
+
 function applyUserInsurance(state: GameState, take: boolean): GameState {
   const grade = {
-    ...gradeInsurance(take, state.settings.mode, currentTrueCount(state)),
+    ...gradeInsurance(
+      take,
+      state.settings.mode,
+      currentTrueCount(state),
+      isEvenMoneyOffer(state)
+    ),
     drilled: state.drilledLabel !== null,
   }
   const seats = state.seats.map((seat) =>

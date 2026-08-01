@@ -147,6 +147,14 @@ export const ACHIEVEMENTS: AchievementMeta[] = [
     },
   },
   {
+    id: 'speed-counter',
+    name: 'Speed Counter',
+    glyph: '⚡',
+    description: 'Counted a drill correctly at 120+ cards per minute.',
+    hint: 'Nail a speed drill at Fast tempo or quicker.',
+    check: (s) => s.speedDrills.bestPace >= 120,
+  },
+  {
     id: 'hands-100',
     name: 'Shoe Leather',
     glyph: '👞',

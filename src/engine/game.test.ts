@@ -191,6 +191,42 @@ describe('insurance and peek', () => {
     expect(s.userBankroll).toBe(980)
   })
 
+  it('even money: taking it locks in exactly +1 bet either way', () => {
+    // dealer also has blackjack: hand pushes, insurance pays 2:1
+    let s = stacked({ user: ['A', 'K'], up: 'A', hole: 'Q' })
+    s = deal(s, 100)
+    expect(s.phase).toBe('insurance')
+    s = gameReducer(s, { type: 'INSURANCE', take: true })
+    expect(s.userBankroll).toBe(1100)
+
+    // dealer has no blackjack: 3:2 on the natural, insurance lost
+    let t = stacked({ user: ['A', 'K'], up: 'A', hole: '9' })
+    t = deal(t, 100)
+    t = gameReducer(t, { type: 'INSURANCE', take: true })
+    expect(t.awaitingAck).toBe(true) // taking it is a mistake, so play pauses
+    t = gameReducer(t, { type: 'ACKNOWLEDGE' })
+    t = tickUntil(t, 'roundOver')
+    expect(t.userBankroll).toBe(1100)
+  })
+
+  it('declining even money keeps the 3:2 upside and is graded as such', () => {
+    let s = stacked({ user: ['A', 'K'], up: 'A', hole: '9' })
+    s = deal(s, 100)
+    s = gameReducer(s, { type: 'INSURANCE', take: false })
+    expect(s.lastGrade?.wasCorrect).toBe(true)
+    expect(s.lastGrade?.explanation.body).toMatch(/insurance wearing a disguise/i)
+    s = tickUntil(s, 'roundOver')
+    expect(s.userBankroll).toBe(1150)
+  })
+
+  it('a non-blackjack hand still gets the plain insurance wording', () => {
+    let s = stacked({ user: ['10', '9'], up: 'A', hole: '9' })
+    s = deal(s, 100)
+    s = gameReducer(s, { type: 'INSURANCE', take: false })
+    expect(s.lastGrade?.explanation.body).not.toMatch(/insurance wearing a disguise/i)
+    expect(s.lastGrade?.explanation.body).toMatch(/side bet/i)
+  })
+
   it('player blackjack pushes a dealer blackjack', () => {
     let s = stacked({ user: ['A', 'Q'], up: 'K', hole: 'A' })
     s = deal(s, 20)
