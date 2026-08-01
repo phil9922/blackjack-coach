@@ -113,6 +113,13 @@ export interface GameState {
   handsPlayed: number
   /** label of the drill spot this round was stacked toward, if any */
   drilledLabel: string | null
+  /**
+   * Cards a counting drill sent to the discard tray to reach its target count.
+   * They really left the shoe (and were counted), so the count stays honest —
+   * this is the "you sat down mid-shoe" situation, shown face-up so it can be
+   * counted like any other player's cards.
+   */
+  burnedCards: Card[]
   /** pending rule/settings edits that apply at the next betting phase */
   pendingRules: TableRules | null
   pendingSettings: Settings | null
@@ -172,6 +179,7 @@ export function initGame(opts?: {
     handsSinceQuiz: 0,
     handsPlayed: 0,
     drilledLabel: null,
+    burnedCards: [],
     pendingRules: null,
     pendingSettings: null,
   }
@@ -241,6 +249,55 @@ function drawRank(state: GameState, rank: Rank): { card: Card; state: GameState 
   const shoe = state.shoe.slice()
   ;[shoe[state.nextCard], shoe[found]] = [shoe[found], shoe[state.nextCard]]
   return draw({ ...state, shoe }, true)
+}
+
+/**
+ * Move the shoe toward a target true count by discarding cards that push the
+ * count that way (low cards to raise it, tens/aces to lower it). The cards are
+ * genuinely removed and counted, so composition and count stay consistent —
+ * no faked counts. Stops early if the shoe runs low on the needed rank or the
+ * cut card gets close; grading always uses the count actually reached.
+ */
+function burnToTrueCount(
+  state: GameState,
+  target: number,
+  /** count/shoe effect of the cards this round is about to deal */
+  projection: { rc: number; remaining: number }
+): GameState {
+  let s = state
+  const burned: Card[] = []
+  // Aim at the count as it will read when the player acts, not right now.
+  const projectedTc = (st: GameState) =>
+    trueCount(st.runningCount + projection.rc, st.shoe.length - st.nextCard + projection.remaining)
+
+  const startTc = projectedTc(s)
+  if (startTc === target) return { ...s, burnedCards: [] }
+  const needHigher = startTc < target
+  const MAX_BURN = 140
+
+  for (let i = 0; i < MAX_BURN; i++) {
+    const tc = projectedTc(s)
+    if (needHigher ? tc >= target : tc <= target) break
+    // leave room for the round itself plus a margin before the cut card
+    if (s.nextCard >= s.cutIndex - 25) break
+
+    let found = -1
+    for (let j = s.nextCard; j < s.shoe.length; j++) {
+      const v = hiLoValue(s.shoe[j].rank)
+      if (needHigher ? v > 0 : v < 0) {
+        found = j
+        break
+      }
+    }
+    if (found === -1) break
+
+    const shoe = s.shoe.slice()
+    ;[shoe[s.nextCard], shoe[found]] = [shoe[found], shoe[s.nextCard]]
+    const d = draw({ ...s, shoe }, true)
+    s = d.state
+    burned.push(d.card)
+  }
+  return { ...s, burnedCards: burned }
 }
 
 function pickDrillSpot(state: GameState, drill: DrillPlan): { spot: DrillSpot | null; state: GameState } {
@@ -379,6 +436,7 @@ function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
     insuranceNet: 0,
     lastQuiz: null,
     drilledLabel: null,
+    burnedCards: [],
   }
   if (s.pendingShuffle) s = reshuffle(s)
 
@@ -387,7 +445,23 @@ function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
     const picked = pickDrillSpot(s, drill)
     s = picked.state
     drillSpot = picked.spot
-    if (drillSpot) s = { ...s, drilledLabel: drillSpot.label }
+    if (drillSpot) {
+      s = { ...s, drilledLabel: drillSpot.label }
+      if (drillSpot.targetTrueCount !== undefined && drillSpot.playerRanks && drillSpot.dealerUp) {
+        // The player's two cards and the dealer upcard are known, so their
+        // effect on the count is predictable; AI cards are not (they average
+        // out). The hole card stays uncounted, but does leave the shoe.
+        const known =
+          hiLoValue(drillSpot.playerRanks[0]) +
+          hiLoValue(drillSpot.playerRanks[1]) +
+          hiLoValue(drillSpot.dealerUp)
+        const cardsOut = 2 * s.seats.length + 2
+        s = burnToTrueCount(s, drillSpot.targetTrueCount, {
+          rc: known,
+          remaining: -cardsOut + 1,
+        })
+      }
+    }
   }
 
   // AI bets + fresh hands

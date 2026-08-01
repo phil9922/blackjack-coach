@@ -324,6 +324,43 @@ select:focus-visible {
   border-radius: 999px;
 }
 
+.burn {
+  align-self: center;
+  max-width: min(620px, 100%);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px dashed var(--felt-line);
+  border-radius: 10px;
+  padding: 8px 12px 10px;
+}
+
+.burn__label {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.68);
+  text-align: center;
+}
+
+.burn__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+}
+
+.burn__card {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  line-height: 1;
+  background: var(--paper-dim);
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 3px 4px;
+}
+
+.burn__card.is-red {
+  color: #b0342a;
+}
+
 .count-chip {
   align-self: center;
   font-family: var(--mono);

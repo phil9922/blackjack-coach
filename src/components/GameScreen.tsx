@@ -137,7 +137,9 @@ export function GameScreen({
 
   const onDeal = (amount: number, advised: number) => {
     stats.recordBetAdvice(Math.abs(amount - advised) <= state.rules.tableMin / 2, state.settings.mode)
-    const drill = state.settings.drillMode ? buildDrillPlan(stats.stats) : undefined
+    const drill = state.settings.drillMode
+      ? buildDrillPlan(stats.stats, state.settings.mode)
+      : undefined
     dispatch({ type: 'PLACE_BET_AND_DEAL', amount, drill })
   }
 
@@ -177,6 +179,26 @@ export function GameScreen({
           <div className="drill-chip" title="Drill mode stacked this deal toward one of your trouble spots">
             ◎ drill hand
           </div>
+        )}
+
+        {state.burnedCards.length > 0 && state.phase !== 'betting' && (
+          <section className="burn" aria-label="Cards already dealt out of this shoe">
+            <p className="burn__label">
+              You sit down mid-shoe — {state.burnedCards.length} cards already in the discard tray.
+              Count them like any other player's.
+            </p>
+            <div className="burn__cards">
+              {state.burnedCards.map((c, i) => (
+                <span
+                  key={i}
+                  className={`burn__card ${c.suit === '♥' || c.suit === '♦' ? 'is-red' : ''}`}
+                >
+                  {c.rank}
+                  {c.suit}
+                </span>
+              ))}
+            </div>
+          </section>
         )}
 
         {state.settings.mode === 'counting' && state.settings.showCount && (

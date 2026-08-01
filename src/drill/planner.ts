@@ -1,6 +1,8 @@
-import type { Rank } from '../engine/types'
+import type { Rank, TrainingMode } from '../engine/types'
 import type { StatsState } from '../stats/model'
 import { unassisted } from '../stats/analysis'
+import { DEVIATIONS } from '../strategy/deviations'
+import { handKeyToString } from '../strategy/types'
 
 /**
  * Drill mode: the trainer learns where the user struggles and deals more of
@@ -16,6 +18,12 @@ export interface DrillSpot {
   playerRanks: [Rank, Rank] | null
   dealerUp: Rank | null
   weight: number
+  /**
+   * Counting drills: move the shoe to this true count first, by burning cards
+   * to the discard tray (honest — the cards really leave the shoe, exactly as
+   * if you sat down mid-shoe). Undefined for plain basic-strategy drills.
+   */
+  targetTrueCount?: number
 }
 
 export interface DrillPlan {
@@ -72,7 +80,46 @@ function spotLabel(keyStr: string, up: Rank): string {
 /** How many recent decisions count as "recent" for the recency boost. */
 const RECENT_WINDOW = 200
 
-export function buildDrillPlan(stats: StatsState): DrillPlan {
+function fmtTc(tc: number): string {
+  return `${tc >= 0 ? '+' : ''}${tc}`
+}
+
+/**
+ * Counting-mode drills: put the player in a spot where an index play is (or
+ * pointedly is NOT) the right move. Both variants are generated — always
+ * dealing live indices would teach "drill hand = deviate" instead of judgment.
+ */
+function deviationSpots(ds: ReturnType<typeof unassisted>, baseWeight: number): DrillSpot[] {
+  const spots: DrillSpot[] = []
+  for (const dev of DEVIATIONS) {
+    const ranks = ranksForKey(handKeyToString(dev.key))
+    if (!ranks) continue
+
+    // Deviations the user has actually botched get drilled harder.
+    const misses = ds.filter(
+      (d) =>
+        d.category === 'deviation' &&
+        !d.wasCorrect &&
+        d.keyStr === handKeyToString(dev.key) &&
+        d.up === dev.dealerUp
+    ).length
+
+    const live = dev.dir === 'atOrAbove' ? dev.threshold : dev.threshold
+    const short = dev.dir === 'atOrAbove' ? dev.threshold - 1 : dev.threshold + 1
+    const spot = (tc: number, weight: number): DrillSpot => ({
+      label: `${handKeyToString(dev.key).replace('hard', 'hard ').replace('pair', 'pair of ')} vs ${dev.dealerUp} at TC ${fmtTc(tc)}`,
+      playerRanks: ranks,
+      dealerUp: dev.dealerUp,
+      targetTrueCount: tc,
+      weight,
+    })
+    spots.push(spot(live, baseWeight * 2 + misses * 4))
+    spots.push(spot(short, baseWeight + misses * 2))
+  }
+  return spots
+}
+
+export function buildDrillPlan(stats: StatsState, mode: TrainingMode = 'basic'): DrillPlan {
   const ds = unassisted(stats.decisions)
   const recentStart = Math.max(0, ds.length - RECENT_WINDOW)
 
@@ -116,6 +163,11 @@ export function buildDrillPlan(stats: StatsState): DrillPlan {
     const label = spotLabel(c.key, c.up)
     if (!ranks || taken.has(label)) continue
     spots.push({ label, playerRanks: ranks, dealerUp: c.up, weight: curatedEach })
+  }
+
+  // Counting mode adds index-play scenarios on top of the basic-strategy pool.
+  if (mode === 'counting') {
+    spots.push(...deviationSpots(ds, curatedEach * 1.5))
   }
 
   // Random escape: ~20% of deals stay natural so the drill can't be gamed.

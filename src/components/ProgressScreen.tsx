@@ -26,7 +26,7 @@ export function ProgressScreen({
   const strong = strengths(stats.stats)
   const sessions = deriveSessions(stats.stats)
   const settings = state.pendingSettings ?? state.settings
-  const targets = drillTargets(buildDrillPlan(stats.stats))
+  const targets = drillTargets(buildDrillPlan(stats.stats, settings.mode))
 
   const toggleDrill = () => {
     const next = { ...settings, drillMode: !settings.drillMode }
