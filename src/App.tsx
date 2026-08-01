@@ -67,7 +67,7 @@ export default function App() {
     <div className="app">
       <header className="rail-top">
         <h1 className="brand">
-          <span className="brand__mark">♠</span> Blackjack Trainer
+          <span className="brand__mark">♠</span> Blackjack Coach
         </h1>
 
         <select

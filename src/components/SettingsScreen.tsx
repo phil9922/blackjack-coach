@@ -352,7 +352,7 @@ export function SettingsScreen({
                     if (profile) {
                       window.location.reload()
                     } else {
-                      window.alert('That file is not a Blackjack Trainer profile export.')
+                      window.alert('That file is not a Blackjack Coach profile export.')
                     }
                   } catch {
                     window.alert('Could not read that file as a profile export.')
