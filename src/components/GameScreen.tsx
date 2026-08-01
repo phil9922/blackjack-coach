@@ -69,6 +69,28 @@ export function GameScreen({
     if (!isUserTurn) setHint(null)
   }, [isUserTurn, state.activeHandIndex, state.gradeSeq])
 
+  // On stacked (mobile) layouts the verdict rail sits below the table, so
+  // bring feedback into view when it lands — and return to the controls once
+  // a paused mistake is acknowledged.
+  const isStacked = () => window.matchMedia('(max-width: 900px)').matches
+  const prevAck = useRef(false)
+  useEffect(() => {
+    if (state.gradeSeq > 0 && isStacked()) {
+      document.querySelector('.rail .verdict')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [state.gradeSeq])
+  useEffect(() => {
+    if (hint && isStacked()) {
+      document.querySelector('.rail .verdict--hint')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [hint])
+  useEffect(() => {
+    if (prevAck.current && !state.awaitingAck && isStacked()) {
+      document.querySelector('.dock')?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    }
+    prevAck.current = state.awaitingAck
+  }, [state.awaitingAck])
+
   // Surface a coach tip at most once per 10 rounds, only when one newly qualifies.
   useEffect(() => {
     if (state.phase !== 'roundOver') return

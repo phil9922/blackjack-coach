@@ -63,6 +63,11 @@ button {
   cursor: pointer;
 }
 
+/* fieldsets default to min-width: min-content, which breaks narrow layouts */
+fieldset {
+  min-width: 0;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
@@ -1527,4 +1532,121 @@ select:focus-visible {
 .settings__saved {
   color: var(--book);
   font-size: 0.9rem;
+}
+
+/* --- phone layout (375-430px targets) ---------------------------------------- */
+
+@media (max-width: 700px) {
+  :root {
+    --card-w: 46px;
+    --card-h: 66px;
+  }
+
+  /* Compact header: brand+bankroll row, controls row(s), full-width tabs. */
+  .rail-top {
+    padding: 8px 12px;
+    gap: 8px 10px;
+  }
+
+  .brand {
+    font-size: 1.05rem;
+    order: 0;
+    flex: 1;
+  }
+
+  .bankroll {
+    order: 1;
+  }
+
+  .profile-select {
+    order: 2;
+    max-width: 130px;
+  }
+
+  .mode-toggle {
+    order: 3;
+  }
+
+  .mode-toggle__opt {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+
+  .drill-toggle {
+    order: 4;
+    padding: 4px 10px;
+    font-size: 0.76rem;
+  }
+
+  .rank-chip {
+    order: 5;
+    padding: 4px 10px;
+    font-size: 0.74rem;
+  }
+
+  .tabs {
+    order: 6;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .tabs__tab {
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+
+  /* Table: no desktop min-height (kills the dead gap), tighter padding. */
+  .table {
+    min-height: 0;
+    padding: 14px 12px 16px;
+    gap: 12px;
+  }
+
+  .seats {
+    gap: 10px;
+  }
+
+  .seat {
+    min-width: 0;
+    padding: 8px 10px 10px;
+  }
+
+  .drill-chip {
+    top: 10px;
+    right: 10px;
+  }
+
+  .dock {
+    min-height: 0;
+  }
+
+  .btn {
+    padding: 10px 14px;
+  }
+
+  .rail {
+    padding: 14px 14px 20px;
+  }
+
+  .stats,
+  .settings {
+    padding: 18px 14px 44px;
+  }
+
+  .settings__row {
+    flex-wrap: wrap;
+  }
+
+  .settings__row > span:first-child {
+    min-width: 0;
+  }
+
+  .quiz-result {
+    max-width: calc(100vw - 24px);
+  }
+
+  .overview {
+    gap: 10px;
+  }
 }
