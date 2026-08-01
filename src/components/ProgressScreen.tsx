@@ -3,6 +3,7 @@ import type { GameState, GameAction } from '../engine/game'
 import { coachReport, strengths } from '../stats/coach'
 import { deriveSessions } from '../stats/sessions'
 import { buildDrillPlan, drillTargets } from '../drill/planner'
+import { countSystemOf } from '../engine/game'
 import { savePersisted } from '../stats/storage'
 import { AiCoachPanel } from './AiCoachPanel'
 import type { AiCoachApi } from '../hooks/useAiCoach'
@@ -30,7 +31,9 @@ export function ProgressScreen({
   const strong = strengths(stats.stats)
   const sessions = deriveSessions(stats.stats)
   const settings = state.pendingSettings ?? state.settings
-  const targets = drillTargets(buildDrillPlan(stats.stats, settings.mode))
+  const targets = drillTargets(
+    buildDrillPlan(stats.stats, settings.mode, countSystemOf(state).supportsDeviations)
+  )
 
   const toggleDrill = () => {
     const next = { ...settings, drillMode: !settings.drillMode }

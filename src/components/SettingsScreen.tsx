@@ -3,6 +3,11 @@ import type { GameState, GameAction, Settings, AiSeatConfig } from '../engine/ga
 import type { TableRules } from '../engine/rules'
 import { AI_PROFILES, AI_NAMES, type AiProfileId } from '../players/profiles'
 import {
+  COUNT_SYSTEM_LIST,
+  getCountSystem,
+  type CountSystemId,
+} from '../counting/systems'
+import {
   savePersisted,
   getProfiles,
   getActiveProfile,
@@ -125,6 +130,34 @@ export function SettingsScreen({
           />
           <span>Show the running/true count (turn off to test yourself)</span>
         </label>
+
+        <label className="settings__row">
+          <span>Counting system</span>
+          <select
+            value={settings.countSystem}
+            onChange={(e) =>
+              setSettings({ ...settings, countSystem: e.target.value as CountSystemId })
+            }
+          >
+            {COUNT_SYSTEM_LIST.map((sys) => (
+              <option key={sys.id} value={sys.id}>
+                {sys.name} — {sys.blurb}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="settings__note">{getCountSystem(settings.countSystem).detail}</p>
+        {!getCountSystem(settings.countSystem).supportsDeviations && (
+          <p className="settings__warn">
+            <strong>Deviations are off while {getCountSystem(settings.countSystem).name} is
+            selected.</strong>{' '}
+            Index numbers belong to the system they were computed for — a Hi-Lo index applied to
+            a {getCountSystem(settings.countSystem).name} count is just a wrong play. This app
+            only ships a verified Hi-Lo index set, so your plays are graded against basic
+            strategy and index drills are hidden. The count, quizzes, speed drill and bet ramp
+            all still work.
+          </p>
+        )}
         <label className="settings__row settings__row--check">
           <input
             type="checkbox"

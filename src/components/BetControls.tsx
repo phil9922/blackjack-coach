@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { GameState, GameAction } from '../engine/game'
-import { currentTrueCount } from '../engine/game'
+import { currentTrueCount, countSystemOf } from '../engine/game'
 import { suggestBet } from '../betting/advisor'
 
 const CHIPS = [5, 25, 100, 500]
@@ -22,6 +22,9 @@ export function BetControls({
     bankroll: state.userBankroll,
     tableMin,
     tableMax,
+    system: countSystemOf(state),
+    runningCount: state.runningCount,
+    decks: state.rules.decks,
   })
   const broke = state.userBankroll < tableMin
   const clamp = (n: number) => Math.max(0, Math.min(n, Math.min(tableMax, state.userBankroll)))

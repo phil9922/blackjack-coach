@@ -41,6 +41,8 @@ If you're going to memorize something, memorize something that was checked.
 
 **Card counting mode.** Hi-Lo running and true count, count quizzes mid-shoe, count-based bet sizing with the reasoning, and the Illustrious 18 + Fab 4 deviations — 20 indices verified against H17-specific sources, so the "correct" answer shifts with the count exactly as it should.
 
+Three counting systems are selectable: **Hi-Lo**, **KO** (unbalanced — the shoe starts at a negative running count and you never divide by decks remaining), and **Hi-Opt I** (ace-neutral, so it flags that you'd want an ace side count for betting). Only Hi-Lo ships a verified index set, and the app will not pretend otherwise: pick another system and deviation grading switches off, with a note saying why. An index number belongs to the system it was computed for, so grading a KO count against Hi-Lo indices would teach a wrong play — the count, quizzes, speed drill and bet ramp all keep working, only the index plays go away.
+
 **Drill mode.** The trainer learns which spots trip you up and deals more of them — weighted by how often and how recently you miss them, so a spot fades from rotation once you fix it. About one hand in four stays fully random so you can't game it. In counting mode it builds specific count scenarios by discarding cards from the real shoe (never by faking a count), including hands that land *just short* of an index, so you have to judge rather than reflex-deviate.
 
 ![The coaching view](docs/coach.png)

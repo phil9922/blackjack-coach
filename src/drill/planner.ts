@@ -119,7 +119,16 @@ function deviationSpots(ds: ReturnType<typeof unassisted>, baseWeight: number): 
   return spots
 }
 
-export function buildDrillPlan(stats: StatsState, mode: TrainingMode = 'basic'): DrillPlan {
+export function buildDrillPlan(
+  stats: StatsState,
+  mode: TrainingMode = 'basic',
+  /**
+   * Index-play scenarios are Hi-Lo-specific — the target counts and the plays
+   * they justify both are. A counting system without verified indices gets the
+   * basic-strategy pool only.
+   */
+  allowDeviations = true
+): DrillPlan {
   const ds = unassisted(stats.decisions)
   const recentStart = Math.max(0, ds.length - RECENT_WINDOW)
 
@@ -166,7 +175,7 @@ export function buildDrillPlan(stats: StatsState, mode: TrainingMode = 'basic'):
   }
 
   // Counting mode adds index-play scenarios on top of the basic-strategy pool.
-  if (mode === 'counting') {
+  if (mode === 'counting' && allowDeviations) {
     spots.push(...deviationSpots(ds, curatedEach * 1.5))
   }
 

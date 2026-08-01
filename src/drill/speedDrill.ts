@@ -1,6 +1,7 @@
 import type { Card } from '../engine/types'
 import { buildShoe, shuffle } from '../engine/cards'
-import { countCards } from '../counting/hilo'
+import type { CountSystem } from '../counting/systems'
+import { COUNT_SYSTEMS, countRanks } from '../counting/systems'
 
 /**
  * Count speed drill: a stream of cards at a fixed tempo, then "what's the
@@ -30,12 +31,20 @@ export interface SpeedDrillRun {
   answer: number
 }
 
-/** Deal `count` cards off a freshly shuffled deck (seeded for reproducibility). */
-export function buildSpeedDrill(count: number, seed: number): SpeedDrillRun {
+/**
+ * Deal `count` cards off a freshly shuffled deck (seeded for reproducibility).
+ * The answer is the running count in whichever system the player is training,
+ * starting from zero — this drills the tags, not the shoe's IRC.
+ */
+export function buildSpeedDrill(
+  count: number,
+  seed: number,
+  system: CountSystem = COUNT_SYSTEMS.hilo
+): SpeedDrillRun {
   const decks = Math.ceil(count / 52)
   const { cards } = shuffle(buildShoe(decks), seed)
   const run = cards.slice(0, count)
-  return { cards: run, answer: countCards(run) }
+  return { cards: run, answer: countRanks(system, run.map((c) => c.rank)) }
 }
 
 export interface SpeedDrillScore {

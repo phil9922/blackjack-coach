@@ -1872,6 +1872,34 @@ select:focus-visible {
   line-height: 1.5;
 }
 
+.settings__note {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 2px 0 10px;
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+/* Deviation grading is off — this is a correctness caveat, not decoration. */
+.settings__warn {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  max-width: 62ch;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: rgba(201, 162, 39, 0.09);
+  border-radius: 0 6px 6px 0;
+}
+
+.modal__note {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 4px 0 14px;
+}
+
 .settings__apply {
   display: flex;
   gap: 14px;

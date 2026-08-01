@@ -4,8 +4,17 @@ import type { TrainingMode } from '../engine/types'
 import { SKILLS, skillLevel, playerRank, skillForm } from '../gamify/skills'
 import { ACHIEVEMENTS } from '../gamify/achievements'
 import { SpeedDrillModal } from './SpeedDrillModal'
+import type { CountSystem } from '../counting/systems'
 
-export function SkillsScreen({ stats, mode }: { stats: StatsApi; mode: TrainingMode }) {
+export function SkillsScreen({
+  stats,
+  mode,
+  system,
+}: {
+  stats: StatsApi
+  mode: TrainingMode
+  system: CountSystem
+}) {
   const [speedDrill, setSpeedDrill] = useState(false)
   const s = stats.stats
   const rank = playerRank(s.skillXp)
@@ -79,6 +88,7 @@ export function SkillsScreen({ stats, mode }: { stats: StatsApi; mode: TrainingM
 
       {speedDrill && (
         <SpeedDrillModal
+          system={system}
           onClose={() => setSpeedDrill(false)}
           onFinish={(score) => stats.recordSpeedDrill(score)}
         />

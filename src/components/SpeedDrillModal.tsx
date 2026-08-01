@@ -8,15 +8,18 @@ import {
   type DrillSpeed,
   type SpeedDrillScore,
 } from '../drill/speedDrill'
+import type { CountSystem } from '../counting/systems'
 
 type Stage = 'setup' | 'counting' | 'answer' | 'result'
 
 export function SpeedDrillModal({
   onClose,
   onFinish,
+  system,
 }: {
   onClose: () => void
   onFinish: (score: SpeedDrillScore) => void
+  system: CountSystem
 }) {
   const [stage, setStage] = useState<Stage>('setup')
   const [speed, setSpeed] = useState<DrillSpeed>('table')
@@ -24,13 +27,13 @@ export function SpeedDrillModal({
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState('')
   const [score, setScore] = useState<SpeedDrillScore | null>(null)
-  const [run, setRun] = useState(() => buildSpeedDrill(26, 1))
+  const [run, setRun] = useState(() => buildSpeedDrill(26, 1, system))
   const reported = useRef(false)
 
   const ms = SPEEDS.find((s) => s.id === speed)!.ms
 
   const start = () => {
-    setRun(buildSpeedDrill(size, Math.floor(Math.random() * 2 ** 31)))
+    setRun(buildSpeedDrill(size, Math.floor(Math.random() * 2 ** 31), system))
     setIndex(0)
     setAnswer('')
     setScore(null)

@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GameState, GameAction } from '../engine/game'
-import { activeSeat, currentTrueCount, cardsRemaining, userSeat, isEvenMoneyOffer } from '../engine/game'
+import {
+  activeSeat,
+  currentTrueCount,
+  cardsRemaining,
+  countSystemOf,
+  userSeat,
+  isEvenMoneyOffer,
+} from '../engine/game'
 import { evaluateHand } from '../engine/hand'
 import { CardView } from './CardView'
 import { SeatView } from './SeatView'
@@ -176,7 +183,11 @@ export function GameScreen({
   const onDeal = (amount: number, advised: number) => {
     stats.recordBetAdvice(Math.abs(amount - advised) <= state.rules.tableMin / 2, state.settings.mode)
     const drill = state.settings.drillMode
-      ? buildDrillPlan(stats.stats, state.settings.mode)
+      ? buildDrillPlan(
+          stats.stats,
+          state.settings.mode,
+          countSystemOf(state).supportsDeviations
+        )
       : undefined
     dispatch({ type: 'PLACE_BET_AND_DEAL', amount, drill })
   }
@@ -252,10 +263,23 @@ export function GameScreen({
         )}
 
         {state.settings.mode === 'counting' && state.settings.showCount && (
-          <div className="count-chip" title="Running count / true count">
-            RC {state.runningCount >= 0 ? '+' : ''}
-            {state.runningCount} · TC {currentTrueCount(state) >= 0 ? '+' : ''}
-            {currentTrueCount(state)} · {Math.round(cardsRemaining(state) / 52 * 10) / 10} decks left
+          <div
+            className="count-chip"
+            title={
+              countSystemOf(state).balanced
+                ? `${countSystemOf(state).name}: running count / true count`
+                : `${countSystemOf(state).name}: unbalanced, so the running count is the signal`
+            }
+          >
+            {countSystemOf(state).name} · RC {state.runningCount >= 0 ? '+' : ''}
+            {state.runningCount}
+            {countSystemOf(state).balanced && (
+              <>
+                {' '}· TC {currentTrueCount(state) >= 0 ? '+' : ''}
+                {currentTrueCount(state)}
+              </>
+            )}{' '}
+            · {Math.round((cardsRemaining(state) / 52) * 10) / 10} decks left
           </div>
         )}
 
@@ -328,7 +352,9 @@ export function GameScreen({
         onDismissAiAlert={coach.dismissAlert}
       />
 
-      {state.phase === 'countQuiz' && <CountQuizModal dispatch={dispatch} />}
+      {state.phase === 'countQuiz' && (
+        <CountQuizModal dispatch={dispatch} system={countSystemOf(state)} />
+      )}
       {state.lastQuiz && state.phase === 'betting' && (
         <div className="quiz-result">
           <strong>{state.lastQuiz.runningCorrect && state.lastQuiz.trueCorrect ? 'Count on target.' : 'Count drifted.'}</strong>{' '}

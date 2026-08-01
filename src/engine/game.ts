@@ -7,8 +7,15 @@ import { evaluateHand, isBlackjack, isBusted, isHandResolved, isPairHand, pairRa
 import { dealerShouldHit } from './dealer'
 import { settleHand } from './payouts'
 import { rngNext, rngInt } from './rng'
-import { hiLoValue } from '../counting/hilo'
 import { trueCount } from '../counting/trueCount'
+import type { CountSystem, CountSystemId } from '../counting/systems'
+import {
+  DEFAULT_COUNT_SYSTEM,
+  bettingCount,
+  getCountSystem,
+  initialRunningCount,
+  tagValue,
+} from '../counting/systems'
 import type { Availability, GradedDecision, Action } from '../strategy/types'
 import { gradeDecision, gradeInsurance } from '../strategy/grade'
 import type { AiProfileId } from '../players/profiles'
@@ -40,6 +47,12 @@ export interface Settings {
   soundEnabled: boolean
   /** live AI coaching cadence — needs a Claude API key */
   liveCoach: 'off' | 'normal' | 'often'
+  /**
+   * Which card counting system to practise. Only Hi-Lo carries verified
+   * deviation indices, so selecting another one grades plays as straight
+   * basic strategy — see src/counting/systems.ts.
+   */
+  countSystem: CountSystemId
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -51,6 +64,7 @@ export const DEFAULT_SETTINGS: Settings = {
   drillMode: false,
   soundEnabled: false,
   liveCoach: 'off',
+  countSystem: DEFAULT_COUNT_SYSTEM,
 }
 
 export interface Seat {
@@ -84,6 +98,11 @@ export interface QuizResult {
   answerTrue: number
   runningCorrect: boolean
   trueCorrect: boolean
+  /**
+   * Unbalanced systems have no true count to ask for. When false the true-count
+   * half of the quiz was skipped and `trueCorrect` is a free pass, not a score.
+   */
+  askedTrue: boolean
 }
 
 export interface GameState {
@@ -173,7 +192,7 @@ export function initGame(opts?: {
     userBankroll: buyIn,
     totalBuyIn: buyIn,
     userBet: rules.tableMin,
-    runningCount: 0,
+    runningCount: initialRunningCount(getCountSystem(settings.countSystem), rules.decks),
     lastGrade: null,
     gradeSeq: 0,
     awaitingAck: false,
@@ -218,7 +237,9 @@ function reshuffle(state: GameState): GameState {
     rngState: jitter.state,
     pendingShuffle: false,
     justShuffled: true,
-    runningCount: 0,
+    // Balanced systems start at zero; KO starts at its negative IRC, which is
+    // what lets its pivot sit at a fixed running count across deck sizes.
+    runningCount: initialRunningCount(countSystemOf(state), state.rules.decks),
   }
 }
 
@@ -230,7 +251,9 @@ function draw(state: GameState, faceUp: boolean): { card: Card; state: GameState
     state: {
       ...state,
       nextCard: state.nextCard + 1,
-      runningCount: faceUp ? state.runningCount + hiLoValue(card.rank) : state.runningCount,
+      runningCount: faceUp
+        ? state.runningCount + tagValue(countSystemOf(state), card.rank)
+        : state.runningCount,
     },
   }
 }
@@ -288,7 +311,7 @@ function burnToTrueCount(
 
     let found = -1
     for (let j = s.nextCard; j < s.shoe.length; j++) {
-      const v = hiLoValue(s.shoe[j].rank)
+      const v = tagValue(countSystemOf(s), s.shoe[j].rank)
       if (needHigher ? v > 0 : v < 0) {
         found = j
         break
@@ -325,8 +348,44 @@ export function cardsRemaining(state: GameState): number {
   return state.shoe.length - state.nextCard + holePenalty
 }
 
+export function countSystemOf(state: GameState): CountSystem {
+  return getCountSystem(state.settings.countSystem)
+}
+
+/**
+ * True count for balanced systems. Unbalanced systems (KO) have no true count
+ * — dividing their running count by decks remaining produces a number that
+ * looks meaningful and isn't — so they report 0 and use the running count
+ * everywhere instead.
+ */
 export function currentTrueCount(state: GameState): number {
+  if (!countSystemOf(state).balanced) return 0
   return trueCount(state.runningCount, cardsRemaining(state))
+}
+
+/** Where the shoe stands on the scale the bet ramp reads. */
+export function currentBettingCount(state: GameState): number {
+  return bettingCount(
+    countSystemOf(state),
+    state.runningCount,
+    currentTrueCount(state),
+    state.rules.decks
+  )
+}
+
+/**
+ * The mode the grader should use. Counting mode only unlocks deviation
+ * indices when the selected system actually has verified ones; otherwise
+ * plays are graded as straight basic strategy while the count runs alongside.
+ */
+export function gradingMode(state: GameState): TrainingMode {
+  if (state.settings.mode !== 'counting') return 'basic'
+  return countSystemOf(state).supportsDeviations ? 'counting' : 'basic'
+}
+
+/** True when the player is counting but deviations are off for their system. */
+export function deviationsSuppressed(state: GameState): boolean {
+  return state.settings.mode === 'counting' && !countSystemOf(state).supportsDeviations
 }
 
 export function userSeat(state: GameState): Seat {
@@ -415,11 +474,20 @@ function isUsersTurn(state: GameState): boolean {
 function applySettings(state: GameState, settings: Settings): GameState {
   const seatsChanged =
     JSON.stringify(settings.aiSeats) !== JSON.stringify(state.settings.aiSeats)
-  return {
+  // Swapping counting systems mid-shoe would leave a running count built from
+  // the old system's tags and then keep adding the new one's — a number that
+  // means nothing. Take a fresh shoe so the count starts honest (and, for an
+  // unbalanced system, starts at its IRC).
+  const systemChanged = settings.countSystem !== state.settings.countSystem
+  const next: GameState = {
     ...state,
     settings,
     seats: seatsChanged ? buildSeats(settings) : state.seats,
   }
+  // Shuffle now rather than deferring: this only ever runs between rounds, and
+  // leaving a stale count on screen until the next deal is exactly the kind of
+  // dishonest number this app exists to avoid.
+  return systemChanged ? reshuffle(next) : next
 }
 
 // --- dealing ---------------------------------------------------------------
@@ -457,9 +525,9 @@ function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
         // effect on the count is predictable; AI cards are not (they average
         // out). The hole card stays uncounted, but does leave the shoe.
         const known =
-          hiLoValue(drillSpot.playerRanks[0]) +
-          hiLoValue(drillSpot.playerRanks[1]) +
-          hiLoValue(drillSpot.dealerUp)
+          tagValue(countSystemOf(state), drillSpot.playerRanks[0]) +
+          tagValue(countSystemOf(state), drillSpot.playerRanks[1]) +
+          tagValue(countSystemOf(state), drillSpot.dealerUp)
         const cardsOut = 2 * s.seats.length + 2
         s = burnToTrueCount(s, drillSpot.targetTrueCount, {
           rc: known,
@@ -538,7 +606,8 @@ function applyUserInsurance(state: GameState, take: boolean): GameState {
   const grade = {
     ...gradeInsurance(
       take,
-      state.settings.mode,
+      // Deviation-free systems decline insurance on basic strategy, always.
+      gradingMode(state),
       currentTrueCount(state),
       isEvenMoneyOffer(state)
     ),
@@ -587,7 +656,8 @@ function revealHole(state: GameState): GameState {
   return {
     ...state,
     holeRevealed: true,
-    runningCount: state.runningCount + hiLoValue(state.dealerCards[1].rank),
+    runningCount:
+      state.runningCount + tagValue(countSystemOf(state), state.dealerCards[1].rank),
   }
 }
 
@@ -654,7 +724,7 @@ function applyUserAction(state: GameState, action: Action): GameState {
       cards: hand.cards,
       dealerUp: normalizeRank(state.dealerCards[0].rank),
       av,
-      mode: state.settings.mode,
+      mode: gradingMode(state),
       trueCount: currentTrueCount(state),
       hinted: state.hintUsed,
     }),
@@ -868,16 +938,20 @@ function toNextRound(state: GameState): GameState {
 }
 
 function submitQuiz(state: GameState, running: number, trueAnswer: number): GameState {
+  const askedTrue = countSystemOf(state).balanced
   const actualRunning = state.runningCount
   const remaining = cardsRemaining(state)
-  const actualTrueExact = remaining > 0 ? state.runningCount / Math.max(remaining / 52, 0.5) : 0
+  const actualTrueExact =
+    askedTrue && remaining > 0 ? state.runningCount / Math.max(remaining / 52, 0.5) : 0
   const result: QuizResult = {
     actualRunning,
     actualTrueExact,
     answerRunning: running,
     answerTrue: trueAnswer,
     runningCorrect: running === actualRunning,
-    trueCorrect: Math.abs(trueAnswer - actualTrueExact) <= 0.5,
+    // Not asked means not missed — don't dock XP for a question with no answer.
+    trueCorrect: askedTrue ? Math.abs(trueAnswer - actualTrueExact) <= 0.5 : true,
+    askedTrue,
   }
   return { ...state, phase: 'betting', lastQuiz: result, handsSinceQuiz: 0 }
 }

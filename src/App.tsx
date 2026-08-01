@@ -14,6 +14,7 @@ import {
   createProfile,
   switchProfile,
 } from './stats/storage'
+import { countSystemOf } from './engine/game'
 import { playerRank } from './gamify/skills'
 import { useAiCoach } from './hooks/useAiCoach'
 
@@ -145,7 +146,9 @@ export default function App() {
         {screen === 'table' && (
           <GameScreen state={state} dispatch={dispatch} stats={stats} coach={coach} />
         )}
-        {screen === 'skills' && <SkillsScreen stats={stats} mode={mode} />}
+        {screen === 'skills' && (
+          <SkillsScreen stats={stats} mode={mode} system={countSystemOf(state)} />
+        )}
         {screen === 'stats' && (
           <StatsScreen stats={stats} bankroll={state.userBankroll} totalBuyIn={state.totalBuyIn} />
         )}
