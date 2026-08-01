@@ -14,24 +14,21 @@ Every checklist item is now done except two that need something this machine doe
 Claude API key, and a backend.
 
 ## Blockers
-- **AI coach output quality is still unverified.** Every code path is tested with mocked and
-  invalid keys, but no genuine generation has ever been seen. The harness is written and waiting —
-  `ANTHROPIC_API_KEY=sk-ant-... npx vitest run src/coach-ai/real-api.test.ts` — it just needs a key.
-  No `ANTHROPIC_API_KEY` and no `ant` CLI profile exist here, and the app's client sends the key as
-  `x-api-key`, so an OAuth token would not work in its place.
-- Port 5173 is occupied by an unrelated app on this machine — always run
+None. Port 5173 is occupied by an unrelated app on this machine — always run
   `npm run dev -- --port 5199 --strictPort` and point browser tests at :5199.
 
 ## Next step
-Run the AI coach harness with a real key and read the three printed outputs. It asserts format and
-substance but the useful signal is the prose itself: does the on-demand read name the *instinct*
-behind the soft-double leak rather than listing cells, and does the live list carry items forward
-between updates instead of rewriting itself? Tune `src/coach-ai/{client,live}.ts` if not.
+Nothing is outstanding. **Further work should come from actually using the app at a table** rather
+than from this checklist — the remaining P2s are a verification chore and two things that need a
+backend or a transcription session, not features the app is missing.
 
-After that, the honest answer is that further work should come from actually using the app at a
-table rather than from this checklist.
+`.env` in the project root holds the Claude API key (gitignored, and confirmed absent from the
+production bundle). `npm test` stays offline and free; `npm run test:coach` is the paid live check.
 
 ## Open questions
+- The AI coach's output was verified good over four live runs and needed no prompt changes. Two
+  cosmetic drifts if they ever start to grate: the on-demand read runs ~340-365 words against a
+  200-350 word instruction, and live details run 40-70 words against "one or two sentences".
 - The KO key count and pivot in `src/counting/systems.ts` come from the standard published KO
   tables and are locked by tests, but unlike the strategy chart they have **not** been
   double-transcribed against an independent second source. They only steer bet size, never a play

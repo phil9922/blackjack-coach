@@ -22,6 +22,18 @@
   the running count always equals the IRC plus exactly the face-up cards, for all three systems.
   Both new test groups were mutation-checked (broke a tag value, then the hole-card rule) to
   confirm they actually bite.
+- **Verified the AI coach against the live API** — the last open item. Quality is strong and the
+  prompts needed no changes: the on-demand read headed a section *"The soft hands are one leak, not
+  eight"*, named the instinct (*"treating the ace as insurance instead of leverage"*), caught the
+  over-doubling as a half-learned rule, and declined the variance bait on 16 vs 10 (*"You're playing
+  that fine. The -70 bankroll is variance, not diagnosis"*). The live list carried 7-9 of 10 titles
+  across an update and correctly promoted the fixed leak to doingWell while keeping the still-broken
+  soft-18 item. All three initial failures were miscalibrated assertions, not coach output — see the
+  commit for what each got wrong. Two follow-on fixes: wiring `.env` into `test.env` had silently
+  made `npm test` hit the paid API on every run (108s, four billed calls), so the live suite now
+  needs `COACH_LIVE=1` via `npm run test:coach`; and the "did the fixed leak leave needsWork" check
+  was removed as untestable by regex, since an over-doubling item that contrasts itself with the
+  now-fixed soft doubles matches any /soft/+/doubl/ pattern.
 - **Built a live-API quality harness for the AI coach** (`7052acc`): `src/coach-ai/real-api.test.ts`,
   skipped unless `ANTHROPIC_API_KEY` is set so `npm test` stays offline. The fixture is shaped so a
   coach following the prompt has to notice three things — a soft-double leak spread one miss each

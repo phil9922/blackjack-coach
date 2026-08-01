@@ -7,7 +7,7 @@
 
 ## P1 — Good ideas
 - [x] [20m] Create the GitHub repo as `blackjack-coach` and push (created **private** at the owner's request). Description: "Blackjack basic strategy and card counting trainer — grades every decision, explains why, drills the hands you keep getting wrong, and finds patterns in your play with AI coaching." Topics: `blackjack`, `blackjack-strategy`, `basic-strategy`, `card-counting`, `hi-lo`, `blackjack-trainer`, `ai`, `ai-coach`, `llm`, `claude-api`, `react`, `typescript`
-- [ ] [15m] Verify the AI coach's real output quality — harness is written and gated on a key: `ANTHROPIC_API_KEY=sk-ant-... npx vitest run src/coach-ai/real-api.test.ts`. Read the three printed outputs and tune `src/coach-ai/{client,live}.ts` if the reads are vague or the running list churns between updates
+- [x] [15m] Verify the AI coach's real output quality — done against the live API over four runs. Quality is strong and needed no prompt changes; the three failures were all miscalibrated assertions. Re-run any time with `npm run test:coach`
 - [x] [1.5h] Drill mode for deviations: construct high/low-true-count drill scenarios in counting mode so index plays get practiced, not just encountered
 - [x] [45m] Profile export/import (JSON download/upload) so a profile can move between browsers
 - [x] [45m] Hole-card flip animation and win/loss chip payout animation (respecting prefers-reduced-motion)
