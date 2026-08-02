@@ -414,6 +414,7 @@ export function GameScreen({
         notice={notice}
         onDismissNotice={() => setNotice(null)}
         coach={coach}
+        stats={stats}
       />
 
       {state.phase === 'countQuiz' && (

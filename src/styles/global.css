@@ -1331,6 +1331,86 @@ select:focus-visible {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* The ask box needs room for an answer, so it is wider than the count quiz. */
+.modal--ask {
+  width: min(620px, calc(100vw - 40px));
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+
+.ask__box {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--paper-dim);
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.ask__box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.ask__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+
+.ask__preset {
+  background: transparent;
+  border: 1px dashed var(--paper-edge);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+.ask__preset:hover:not(:disabled) {
+  border-color: var(--accent-deep);
+  color: var(--ink);
+}
+
+.ask__answer {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--paper-dim);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.ask__answer p {
+  margin: 0 0 10px;
+}
+
+.ask__answer p:last-child {
+  margin-bottom: 0;
+}
+
+.ask__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.ask__hint {
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+  margin-left: auto;
+}
+
 .modal__title {
   font-family: var(--display);
   margin: 0 0 4px;

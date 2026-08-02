@@ -6,7 +6,9 @@ import { useState } from 'react'
 import { SKILL_BY_ID, type SkillId } from '../gamify/skills'
 import { loadApiKey } from '../stats/storage'
 import type { AiCoachApi } from '../hooks/useAiCoach'
+import type { StatsApi } from '../hooks/useStats'
 import { RewindButton } from './RewindButton'
+import { AskCoachModal } from './AskCoachModal'
 import type { BetAdvice } from '../betting/advisor'
 
 export interface GamifyNotice {
@@ -24,6 +26,7 @@ export function FeedbackPanel({
   notice,
   onDismissNotice,
   coach,
+  stats,
   betAdvice,
 }: {
   state: GameState
@@ -37,17 +40,17 @@ export function FeedbackPanel({
   notice: GamifyNotice | null
   onDismissNotice: () => void
   coach: AiCoachApi
+  stats: StatsApi
 }) {
   const grade = state.lastGrade
   const xpSkill = lastXp ? SKILL_BY_ID[lastXp.skill as SkillId] : null
 
   // The live coach interrupts only for something newly worth stopping for, so
   // it is silent most of the time by design. This is the way to ask it outright.
-  const [asked, setAsked] = useState(false)
+  const [asking, setAsking] = useState(false)
   const hasKey = loadApiKey().length > 0
   const aiAlert = coach.alert
   const aiBusy = coach.busy
-  const read = asked && !coach.busy ? coach.assessment : null
 
   return (
     <aside className="rail" aria-label="Coaching">
@@ -56,51 +59,13 @@ export function FeedbackPanel({
         {hasKey && (
           <button
             className="btn btn--ask"
-            disabled={coach.busy}
-            onClick={() => {
-              setAsked(true)
-              coach.refresh()
-            }}
-            title="Ask Claude to review your record now, rather than waiting for it to interrupt"
+            onClick={() => setAsking(true)}
+            title="Ask Claude about your play — opens with a review prefilled, or ask your own question"
           >
-            {coach.busy ? 'Reviewing…' : '✦ Ask AI coach'}
+            ✦ Ask AI coach
           </button>
         )}
       </div>
-
-      {read && (
-        <div className="verdict verdict--ai">
-          <span className="verdict__stamp">✦ AI COACH</span>
-          <h3 className="verdict__headline">Where you stand</h3>
-          {read.needsWork.length > 0 ? (
-            <p className="verdict__body">
-              <strong>{read.needsWork[0].title}.</strong> {read.needsWork[0].detail}
-            </p>
-          ) : (
-            <p className="verdict__body">No repeating leak stands out in your record right now.</p>
-          )}
-          {read.doingWell[0] && (
-            <p className="verdict__body">
-              <strong>Working: {read.doingWell[0].title}.</strong> {read.doingWell[0].detail}
-            </p>
-          )}
-          {read.tips[0] && (
-            <p className="verdict__body">
-              <strong>Try next: {read.tips[0].title}.</strong> {read.tips[0].detail}
-            </p>
-          )}
-          <p className="verdict__note">
-            Written by Claude from your stats. The Progress tab has the full read.
-          </p>
-          <button className="btn btn--ghost" onClick={() => setAsked(false)}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {coach.error && asked && (
-        <p className="rail__working">Couldn't reach the coach — see the Progress tab for details.</p>
-      )}
 
       {/* Sizing the bet is a decision like any other, so its reasoning lives
           where every other explanation does — not crowding the dock. */}
@@ -177,6 +142,16 @@ export function FeedbackPanel({
             Nice
           </button>
         </div>
+      )}
+
+      {asking && (
+        <AskCoachModal
+          stats={stats.stats}
+          mode={state.settings.mode}
+          bankroll={state.userBankroll}
+          totalBuyIn={state.totalBuyIn}
+          onClose={() => setAsking(false)}
+        />
       )}
 
       {coachTip && (
