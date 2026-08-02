@@ -60,7 +60,13 @@ export function useGame(stats: StatsApi): [GameState, React.Dispatch<GameAction>
   useEffect(() => {
     if (state.gradeSeq !== seenGrade.current && state.lastGrade) {
       seenGrade.current = state.gradeSeq
-      stats.recordDecision(state.lastGrade, state.settings.mode)
+      // A replayed decision is still graded and explained on screen, but the
+      // grade it replaces is already on the record. Recording it too would let a
+      // rewind buy back accuracy and would feed the drill engine a miss the
+      // player didn't make.
+      if (!state.lastGrade.replayed) {
+        stats.recordDecision(state.lastGrade, state.settings.mode)
+      }
     }
   }, [state.gradeSeq, state.lastGrade, state.settings.mode, stats])
 

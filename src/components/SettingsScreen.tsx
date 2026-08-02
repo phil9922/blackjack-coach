@@ -7,6 +7,7 @@ import {
   getCountSystem,
   type CountSystemId,
 } from '../counting/systems'
+import { TABLE_THEMES, getTableTheme } from '../table/themes'
 import {
   savePersisted,
   getProfiles,
@@ -75,6 +76,50 @@ export function SettingsScreen({
       <p className="settings__note">
         Changes apply at the next hand. Rule changes trigger a fresh shoe.
       </p>
+
+      <fieldset className="settings__group">
+        <legend>The room</legend>
+        <label className="settings__row">
+          <span>Table</span>
+          <select
+            value={settings.tableTheme}
+            onChange={(e) => setSettings({ ...settings, tableTheme: e.target.value })}
+          >
+            {TABLE_THEMES.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="settings__fixed">{getTableTheme(settings.tableTheme).note}</p>
+        <div className="table-swatches" role="presentation">
+          {TABLE_THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`table-swatch ${t.id === settings.tableTheme ? 'is-on' : ''}`}
+              style={
+                {
+                  '--sw-felt': t.vars.felt,
+                  '--sw-deep': t.vars.feltDeep,
+                  '--sw-accent': t.vars.accent,
+                } as React.CSSProperties
+              }
+              onClick={() => setSettings({ ...settings, tableTheme: t.id })}
+              aria-pressed={t.id === settings.tableTheme}
+              title={`${t.name} — ${t.note}`}
+            >
+              <span className="table-swatch__name">{t.name}</span>
+            </button>
+          ))}
+        </div>
+        <p className="settings__fixed">
+          Tables change the felt, the rail and the chips — nothing else. Rules stay exactly where
+          you set them below, because a room's colours and a room's payout schedule are different
+          things and only one of them affects what you should be practising.
+        </p>
+      </fieldset>
 
       <fieldset className="settings__group">
         <legend>Table rules</legend>
@@ -225,13 +270,6 @@ export function SettingsScreen({
           </p>
         )}
       </fieldset>
-
-      <div className="settings__apply">
-        <button className="btn btn--primary" onClick={apply}>
-          Apply settings
-        </button>
-        {saved && <span className="settings__saved">Saved — applies next hand.</span>}
-      </div>
 
       <fieldset className="settings__group">
         <legend>AI coach (optional)</legend>
@@ -396,6 +434,18 @@ export function SettingsScreen({
           </label>
         </div>
       </fieldset>
+
+      {/* Pinned to the viewport, not buried between fieldsets: this button
+          applies every section on the page, and the page is long enough that
+          a static one gets missed or read as applying only what's above it. */}
+      <div className="settings__apply">
+        <button className="btn btn--primary" onClick={apply}>
+          Apply settings
+        </button>
+        <span className="settings__apply-hint">
+          {saved ? 'Saved — applies next hand.' : 'Applies everything on this page.'}
+        </span>
+      </div>
     </div>
   )
 }

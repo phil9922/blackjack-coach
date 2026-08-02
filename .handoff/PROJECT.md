@@ -21,7 +21,13 @@ and data-safety decisions should hold up to public users, not just personal tole
   shoe (drill uses rank-swaps, never conjured cards) and the hole card is only counted at reveal.
   Breaking this makes counting practice worthless at a real table.
 - **Every decision graded** — no action path (splits, doubles, insurance, surrender) may resolve
-  without a graded verdict and explanation.
+  without a graded verdict and explanation. Rewind is the one path that replays a decision, and it
+  keeps the original grade on the record: the replay is graded and explained but marked `replayed`
+  and skipped by `recordDecision`, so taking a move back can never buy back accuracy.
+- **The felt must not lie** — the printed table legends (`BLACKJACK PAYS …`, the soft-17 line, deck
+  count, limits) are generated from the live `TableRules`, never hard-coded. A table advertising 3:2
+  while the engine deals 6:5 is the exact trap this app exists to inoculate against. Table themes are
+  cosmetic for the same reason: a room's colours never carry a room's payout schedule.
 
 ## Constraints
 - Training targets **real casino trips**: rules realism is load-bearing (6D, H17, DAS, no surrender
@@ -32,7 +38,10 @@ and data-safety decisions should hold up to public users, not just personal tole
 - **The app works fully offline.** The AI coach is the single exception and is opt-in, needs the
   user's own API key, and only fires on an explicit button press. Never make a network call a
   precondition for training.
-- Dev server must run on port 5199 (`--strictPort`) — 5173 is occupied by another app on this machine.
+- **Dev server is pinned to port 5175** in `vite.config.ts` with `strictPort: true` — plain
+  `npm run dev` is correct, no flags. This is not a preference: `localStorage` is partitioned by
+  origin *including the port*, so a wandering dev server silently strands every saved profile behind
+  an address the player has no reason to revisit. A collision must fail loudly, never relocate.
 
 ## Definition of done
 The previous milestone — **runs well on a phone**, usable at ~375–430px with no horizontal scroll —

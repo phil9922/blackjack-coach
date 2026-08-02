@@ -7,11 +7,15 @@ import {
   countSystemOf,
   userSeat,
   isEvenMoneyOffer,
+  canRewind,
 } from '../engine/game'
 import { evaluateHand } from '../engine/hand'
 import { CardView } from './CardView'
 import { SeatView } from './SeatView'
 import { Controls } from './Controls'
+import { RewindButton } from './RewindButton'
+import { TableLayout } from './TableLayout'
+import { suggestBet } from '../betting/advisor'
 import { BetControls } from './BetControls'
 import { FeedbackPanel, type GamifyNotice } from './FeedbackPanel'
 import { CountQuizModal } from './CountQuizModal'
@@ -167,6 +171,11 @@ export function GameScreen({
       if (e.key === '?' && isUserTurn) {
         requestHint()
       }
+      // Rewind is deliberately not gated on it being your turn — busting hands
+      // the turn away, and that is exactly when you want to take the move back.
+      if (e.key.toLowerCase() === 'z' && canRewind(state)) {
+        dispatch({ type: 'REWIND' })
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -208,9 +217,31 @@ export function GameScreen({
 
   const evenMoney = isEvenMoneyOffer(state)
 
+  // Computed once and shared: the dock puts the number on a button, the rail
+  // carries the reasoning. Only meaningful while a bet is being sized.
+  const betAdvice =
+    state.phase === 'betting'
+      ? suggestBet({
+          mode: state.settings.mode,
+          trueCount: currentTrueCount(state),
+          bankroll: state.userBankroll,
+          tableMin: state.rules.tableMin,
+          tableMax: state.rules.tableMax,
+          system: countSystemOf(state),
+          runningCount: state.runningCount,
+          decks: state.rules.decks,
+        })
+      : null
+
   return (
     <div className="game">
-      <div className="table" data-phase={state.phase}>
+      {/* Card size is a share of the felt divided by however many seats are on
+          it, so adding players shrinks the cards instead of wrapping the row. */}
+      <div
+        className="table"
+        data-phase={state.phase}
+        style={{ '--seats': state.seats.length } as React.CSSProperties}
+      >
         {state.justShuffled && (
           <div className="shuffle-notice">Cut card reached — fresh shoe, count resets to 0</div>
         )}
@@ -283,6 +314,10 @@ export function GameScreen({
           </div>
         )}
 
+        {/* The arc belongs between the dealer and the players, as on a real
+            table — giving it its own band means it can never sit under a card. */}
+        <TableLayout rules={state.rules} themeId={state.settings.tableTheme} />
+
         <section className="seats" aria-label="Players">
           {state.seats.map((seat, i) => (
             <SeatView
@@ -296,7 +331,12 @@ export function GameScreen({
 
         <section className="dock">
           {state.phase === 'betting' && (
-            <BetControls state={state} dispatch={dispatch} onDeal={onDeal} />
+            <BetControls
+              state={state}
+              dispatch={dispatch}
+              onDeal={onDeal}
+              advice={betAdvice ?? { amount: state.rules.tableMin, reason: '' }}
+            />
           )}
 
           {state.phase === 'insurance' && userSeat(state).insurance === null && (
@@ -317,7 +357,32 @@ export function GameScreen({
             </div>
           )}
 
+          {/* On a split, name the hand right above the buttons — the table shows
+              which one is live, but this is where your eyes are when you act. */}
+          {isUserTurn && !state.awaitingAck && userSeat(state).hands.length > 1 && (
+            <p className="dock__hand">
+              Playing <strong>hand {state.activeHandIndex + 1}</strong> of{' '}
+              {userSeat(state).hands.length}
+            </p>
+          )}
+
           <Controls state={state} dispatch={dispatch} onHint={requestHint} />
+
+          {/* Continue lives here as well as on the verdict rail, so a paused
+              mistake can be cleared without crossing the screen to the sidebar. */}
+          {(state.awaitingAck || canRewind(state)) && (
+            <div className="dock__actions">
+              {state.awaitingAck && (
+                <button
+                  className="btn btn--primary"
+                  onClick={() => dispatch({ type: 'ACKNOWLEDGE' })}
+                >
+                  Got it — continue
+                </button>
+              )}
+              <RewindButton state={state} dispatch={dispatch} />
+            </div>
+          )}
 
           {state.phase === 'seatTurn' && activeSeat(state)?.kind === 'ai' && (
             <p className="dock__waiting">{activeSeat(state)?.name} is playing…</p>
@@ -342,14 +407,13 @@ export function GameScreen({
         state={state}
         dispatch={dispatch}
         hint={hint}
+        betAdvice={betAdvice}
         coachTip={coachTip}
         onDismissTip={() => setCoachTip(null)}
         lastXp={stats.stats.lastXp}
         notice={notice}
         onDismissNotice={() => setNotice(null)}
-        aiAlert={coach.alert}
-        aiBusy={coach.busy}
-        onDismissAiAlert={coach.dismissAlert}
+        coach={coach}
       />
 
       {state.phase === 'countQuiz' && (

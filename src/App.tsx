@@ -15,6 +15,7 @@ import {
   switchProfile,
 } from './stats/storage'
 import { countSystemOf } from './engine/game'
+import { tableThemeStyle } from './table/themes'
 import { playerRank } from './gamify/skills'
 import { useAiCoach } from './hooks/useAiCoach'
 
@@ -64,8 +65,15 @@ export default function App() {
   const drillOn = (state.pendingSettings ?? state.settings).drillMode
   const net = state.userBankroll - state.totalBuyIn
 
+  // Read through pendingSettings so switching tables previews instantly, even
+  // mid-hand when the settings change itself is still queued for the next round.
+  const theme = (state.pendingSettings ?? state.settings).tableTheme
+
   return (
-    <div className="app">
+    <div
+      className={`app ${screen === 'table' ? 'app--table' : ''}`}
+      style={tableThemeStyle(theme) as React.CSSProperties}
+    >
       <header className="rail-top">
         <h1 className="brand">
           <span className="brand__mark">♠</span> Blackjack Coach
@@ -142,7 +150,10 @@ export default function App() {
         </div>
       </header>
 
-      <main className="main">
+      {/* The table view is bounded to the viewport so a long verdict rail
+          scrolls itself instead of stretching the felt (see .main--table).
+          Every other screen is a document that should scroll normally. */}
+      <main className={`main ${screen === 'table' ? 'main--table' : ''}`}>
         {screen === 'table' && (
           <GameScreen state={state} dispatch={dispatch} stats={stats} coach={coach} />
         )}

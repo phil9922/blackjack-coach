@@ -4,6 +4,20 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
+  /**
+   * Saved progress lives in localStorage, which the browser partitions by origin
+   * — and the origin includes the port. A dev server that wanders to whatever
+   * port happens to be free would silently orphan every profile, stat and badge
+   * behind an address you'd have no reason to revisit.
+   *
+   * So the port is pinned. `strictPort` makes a collision fail loudly at startup
+   * instead of quietly moving the app to a new origin and greeting you with an
+   * empty bankroll.
+   */
+  server: {
+    port: 5175,
+    strictPort: true,
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],

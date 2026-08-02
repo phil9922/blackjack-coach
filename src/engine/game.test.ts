@@ -6,11 +6,13 @@ import {
   gameReducer,
   userSeat,
   activeSeat,
+  canRewind,
   DEFAULT_SETTINGS,
   type GameState,
   type Settings,
 } from './game'
 import type { TableRules } from './rules'
+import { isBusted } from './hand'
 
 const c = (rank: Rank): Card => ({ rank, suit: '♠' })
 
@@ -310,6 +312,149 @@ describe('AI seats', () => {
     s = tickUntil(s, 'roundOver')
     expect(s.roundResults).toHaveLength(2)
     expect(s.roundResults?.find((r) => !r.isUser)?.result).toBe('win') // AI 20 vs 17
+  })
+})
+
+describe('rewind', () => {
+  const rewind = (s: GameState) => gameReducer(s, { type: 'REWIND' })
+
+  it('restores the hand, the shoe position and the count exactly', () => {
+    // user 10 (-1) + 6 (+1), up 9 (0) = 0; hole 5 hidden
+    let s = stacked({ user: ['10', '6'], up: '9', hole: '5', extra: ['4'] })
+    s = deal(s, 15)
+    const before = s
+    s = act(s, 'hit') // draws the 4 (+1)
+    expect(userSeat(s).hands[0].cards).toHaveLength(3)
+    expect(s.nextCard).toBe(before.nextCard + 1)
+    expect(s.runningCount).toBe(1)
+
+    s = rewind(s)
+    expect(userSeat(s).hands[0].cards).toEqual(userSeat(before).hands[0].cards)
+    expect(s.nextCard).toBe(before.nextCard)
+    expect(s.runningCount).toBe(before.runningCount)
+    expect(s.phase).toBe('seatTurn')
+    // the shoe itself is untouched — the 4 is back on top, ready to come out again
+    expect(s.shoe).toBe(before.shoe)
+    expect(s.shoe[s.nextCard].rank).toBe('4')
+  })
+
+  it('a rewound bust puts you back at the decision', () => {
+    let s = stacked({ user: ['10', '6'], up: '10', hole: '8', extra: ['10'] })
+    s = deal(s, 15)
+    s = act(s, 'hit') // 26 — bust, turn is handed away
+    expect(s.phase).not.toBe('seatTurn')
+
+    s = rewind(s)
+    expect(s.phase).toBe('seatTurn')
+    expect(activeSeat(s)?.kind).toBe('user')
+    expect(userSeat(s).hands[0].cards).toHaveLength(2)
+    expect(isBusted(userSeat(s).hands[0].cards)).toBe(false)
+  })
+
+  it('keeps the grade on the record and marks the replay so it is not counted twice', () => {
+    // 16 vs 10 hits to 19, so the replay leaves a live hand to keep deciding on
+    let s = stacked({ user: ['10', '6'], up: '10', hole: '8', extra: ['3', '5'] })
+    s = deal(s, 15)
+    s = act(s, 'stand') // 16 vs 10 — book says hit, so this is a miss
+    const missSeq = s.gradeSeq
+    expect(s.lastGrade?.wasCorrect).toBe(false)
+    expect(s.lastGrade?.replayed).toBe(false)
+
+    s = rewind(s)
+    // the miss stays on screen and the sequence stays monotonic, so the effect
+    // that records grades can never be made to re-fire for it
+    expect(s.lastGrade?.wasCorrect).toBe(false)
+    expect(s.gradeSeq).toBe(missSeq)
+    expect(s.replayCredits).toBe(1)
+
+    s = act(s, 'hit') // the replay: graded and explained, but not recorded
+    expect(s.gradeSeq).toBe(missSeq + 1)
+    expect(s.lastGrade?.replayed).toBe(true)
+    expect(s.replayCredits).toBe(0)
+
+    s = act(s, 'stand') // a genuinely new decision — counts normally
+    expect(s.lastGrade?.replayed).toBe(false)
+  })
+
+  it('two rewinds owe two replays', () => {
+    let s = stacked({ user: ['5', '2'], up: '6', hole: '8', extra: ['3', '4', '2', '2'] })
+    s = deal(s, 15)
+    s = act(s, 'hit')
+    s = act(s, 'hit')
+    s = rewind(s)
+    s = rewind(s)
+    expect(s.replayCredits).toBe(2)
+    expect(userSeat(s).hands[0].cards).toHaveLength(2)
+
+    s = act(s, 'hit')
+    expect(s.lastGrade?.replayed).toBe(true)
+    s = act(s, 'hit')
+    expect(s.lastGrade?.replayed).toBe(true)
+    s = act(s, 'stand')
+    expect(s.lastGrade?.replayed).toBe(false)
+  })
+
+  it('cannot rewind before the hand started, or into a settled round', () => {
+    let s = stacked({ user: ['10', '10'], up: '9', hole: '10' })
+    s = deal(s, 50)
+    expect(canRewind(s)).toBe(false) // no decision made yet
+    expect(rewind(s)).toBe(s)
+
+    s = act(s, 'stand')
+    expect(canRewind(s)).toBe(true)
+    s = tickUntil(s, 'roundOver')
+    // bankroll has settled and the outcome is recorded — nothing honest to undo
+    expect(canRewind(s)).toBe(false)
+    expect(rewind(s)).toBe(s)
+  })
+
+  it('a new hand clears the history', () => {
+    let s = stacked({ user: ['10', '6'], up: '9', hole: '5', extra: ['4'] })
+    s = deal(s, 15)
+    s = act(s, 'hit')
+    s = act(s, 'stand')
+    s = tickUntil(s, 'roundOver')
+    s = gameReducer(s, { type: 'NEXT_ROUND' })
+    s = deal(s, 15)
+    expect(s.rewind).toEqual([])
+    expect(s.replayCredits).toBe(0)
+    expect(canRewind(s)).toBe(false)
+  })
+
+  it('rewinding a double restores the bet', () => {
+    let s = stacked({ user: ['5', '6'], up: '9', hole: '10', extra: ['9'] })
+    s = deal(s, 15)
+    expect(userSeat(s).hands[0].bet).toBe(15)
+    s = act(s, 'double')
+    expect(userSeat(s).hands[0].bet).toBe(30)
+    s = rewind(s)
+    expect(userSeat(s).hands[0].bet).toBe(15)
+    expect(userSeat(s).hands[0].doubled).toBeFalsy()
+    expect(userSeat(s).hands[0].cards).toHaveLength(2)
+  })
+
+  it('rewinding a split collapses the hands back into one', () => {
+    let s = stacked({ user: ['8', '8'], up: '6', hole: '10', extra: ['3', '4'] })
+    s = deal(s, 15)
+    s = act(s, 'split')
+    expect(userSeat(s).hands).toHaveLength(2)
+    s = rewind(s)
+    expect(userSeat(s).hands).toHaveLength(1)
+    expect(userSeat(s).hands[0].cards.map((x) => x.rank)).toEqual(['8', '8'])
+    expect(s.activeHandIndex).toBe(0)
+  })
+
+  it('the history is capped so a long hand cannot grow it without bound', () => {
+    // A,A,A... never busts, so this hand can be hit indefinitely.
+    let s = stacked({
+      user: ['A', 'A'],
+      up: '9',
+      hole: '10',
+      extra: Array(30).fill('A' as Rank),
+    })
+    s = deal(s, 15)
+    for (let i = 0; i < 30; i++) s = act(s, 'hit')
+    expect(s.rewind.length).toBeLessThanOrEqual(24)
   })
 })
 

@@ -17,6 +17,7 @@ import {
   tagValue,
 } from '../counting/systems'
 import type { Availability, GradedDecision, Action } from '../strategy/types'
+import { DEFAULT_TABLE_THEME } from '../table/themes'
 import { gradeDecision, gradeInsurance } from '../strategy/grade'
 import type { AiProfileId } from '../players/profiles'
 import { AI_PROFILES } from '../players/profiles'
@@ -53,6 +54,11 @@ export interface Settings {
    * basic strategy — see src/counting/systems.ts.
    */
   countSystem: CountSystemId
+  /**
+   * Which room's palette to wear. Purely cosmetic — see src/table/themes.ts for
+   * why table rules are deliberately not bundled with it.
+   */
+  tableTheme: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -65,6 +71,7 @@ export const DEFAULT_SETTINGS: Settings = {
   soundEnabled: false,
   liveCoach: 'off',
   countSystem: DEFAULT_COUNT_SYSTEM,
+  tableTheme: DEFAULT_TABLE_THEME,
 }
 
 export interface Seat {
@@ -147,7 +154,28 @@ export interface GameState {
   /** pending rule/settings edits that apply at the next betting phase */
   pendingRules: TableRules | null
   pendingSettings: Settings | null
+  /**
+   * One snapshot per user decision this round, newest last, so a decision can be
+   * taken back. Because the whole table lives in this state — shoe position,
+   * running count, hole card, bets — restoring a snapshot rewinds all of it
+   * together. Cards go back to the shoe in the order they left it, so the shoe
+   * stays a true 312-card multiset and the count stays honest.
+   */
+  rewind: RewindPoint[]
+  /**
+   * How many rewound decisions are still owed a replay. While this is above
+   * zero the next graded decision is marked `replayed` and kept out of the
+   * stats — the original grade already went on the record.
+   */
+  replayCredits: number
 }
+
+/**
+ * A restorable table state. Omitting the history itself keeps snapshots from
+ * nesting, and omitting the credit counter keeps it live across a restore —
+ * rewinding twice owes two replays, not one.
+ */
+export type RewindPoint = Omit<GameState, 'rewind' | 'replayCredits'>
 
 export type GameAction =
   | { type: 'PLACE_BET_AND_DEAL'; amount: number; drill?: DrillPlan }
@@ -155,6 +183,7 @@ export type GameAction =
   | { type: 'PLAYER_ACTION'; action: Action }
   | { type: 'USE_HINT' }
   | { type: 'ACKNOWLEDGE' }
+  | { type: 'REWIND' }
   | { type: 'ADVANCE' }
   | { type: 'NEXT_ROUND' }
   | { type: 'QUIZ_SUBMIT'; running: number; trueCountAnswer: number }
@@ -206,6 +235,8 @@ export function initGame(opts?: {
     burnedCards: [],
     pendingRules: null,
     pendingSettings: null,
+    rewind: [],
+    replayCredits: 0,
   }
   return reshuffle(base)
 }
@@ -441,6 +472,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return { ...state, hintUsed: true }
     case 'ACKNOWLEDGE':
       return { ...state, awaitingAck: false }
+    case 'REWIND':
+      return canRewind(state) ? rewindOnce(state) : state
     case 'ADVANCE':
       return advance(state)
     case 'NEXT_ROUND':
@@ -510,6 +543,10 @@ function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
     lastQuiz: null,
     drilledLabel: null,
     burnedCards: [],
+    // A new hand is a clean slate — you cannot rewind into the hand before it,
+    // whose result is already settled and recorded.
+    rewind: [],
+    replayCredits: 0,
   }
   if (s.pendingShuffle) s = reshuffle(s)
 
@@ -704,6 +741,53 @@ function replaceHand(state: GameState, seatIdx: number, handIdx: number, hand: P
   return { ...state, seats }
 }
 
+// --- rewind ----------------------------------------------------------------
+
+/** Deepest a single hand's decision history can go before the oldest is dropped. */
+const MAX_REWIND = 24
+
+function snapshot(state: GameState): RewindPoint {
+  const { rewind: _rewind, replayCredits: _credits, ...rest } = state
+  return rest
+}
+
+/**
+ * A decision can be taken back while the hand is still live. Once the round is
+ * over the bankroll has settled and the outcome is recorded, so there is nothing
+ * honest left to rewind into.
+ */
+export function canRewind(state: GameState): boolean {
+  return (
+    state.rewind.length > 0 &&
+    (state.phase === 'seatTurn' || state.phase === 'dealerTurn')
+  )
+}
+
+function rewindOnce(state: GameState): GameState {
+  const point = state.rewind[state.rewind.length - 1]
+  if (!point) return state
+  return {
+    ...point,
+    rewind: state.rewind.slice(0, -1),
+    // Live, not restored: two rewinds owe two replays.
+    replayCredits: state.replayCredits + 1,
+    // The grade you just earned stays on the record and stays on screen — the
+    // point of a rewind is to replay the hand knowing what you got wrong, not to
+    // erase it. Carrying the sequence forward also keeps it monotonic, so the
+    // effect that records grades cannot be made to fire twice for one decision.
+    lastGrade: state.lastGrade,
+    gradeSeq: state.gradeSeq,
+    awaitingAck: false,
+    // Bookkeeping the stats layer keys off. None of it can change mid-hand, but
+    // carrying it forward means a restore can never resurrect an already-recorded
+    // round or quiz.
+    handsPlayed: state.handsPlayed,
+    roundResults: state.roundResults,
+    lastQuiz: state.lastQuiz,
+    handsSinceQuiz: state.handsSinceQuiz,
+  }
+}
+
 // --- player actions --------------------------------------------------------
 
 function applyUserAction(state: GameState, action: Action): GameState {
@@ -718,6 +802,7 @@ function applyUserAction(state: GameState, action: Action): GameState {
     (action !== 'surrender' || av.canSurrender)
   if (!legal) return state
 
+  const replaying = state.replayCredits > 0
   const grade = {
     ...gradeDecision({
       chosen: action,
@@ -729,10 +814,16 @@ function applyUserAction(state: GameState, action: Action): GameState {
       hinted: state.hintUsed,
     }),
     drilled: state.drilledLabel !== null,
+    replayed: replaying,
   }
 
   let s: GameState = {
     ...state,
+    // Snapshot the table as it stood before this decision, so the decision can
+    // be taken back. Capped so a heavily split hand can't grow the stack without
+    // bound; the oldest point falls off first.
+    rewind: [...state.rewind, snapshot(state)].slice(-MAX_REWIND),
+    replayCredits: replaying ? state.replayCredits - 1 : 0,
     lastGrade: grade,
     gradeSeq: state.gradeSeq + 1,
     awaitingAck: state.settings.pauseOnMistake && !grade.wasCorrect,

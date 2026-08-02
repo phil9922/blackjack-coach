@@ -51,6 +51,12 @@ export interface GradedDecision {
   hinted: boolean
   /** true when the deal was stacked toward a trouble spot by drill mode */
   drilled?: boolean
+  /**
+   * True when this decision replays one the player rewound. It is graded and
+   * explained like any other, but not recorded — the original stands on the
+   * record, so a rewind can't be used to retry a spot into a better score.
+   */
+  replayed?: boolean
   explanation: Explanation
 }
 

@@ -22,9 +22,21 @@ export function SeatView({
         )}
       </div>
       <div className="seat__hands">
-        {seat.hands.map((hand, i) => (
-          <HandView key={i} hand={hand} active={isActive && i === activeHandIndex} />
-        ))}
+        {seat.hands.map((hand, i) => {
+          const handActive = isActive && i === activeHandIndex
+          return (
+            <HandView
+              key={i}
+              hand={hand}
+              active={handActive}
+              index={i}
+              count={seat.hands.length}
+              // Fade the hands that are waiting their turn, so the one being
+              // played is unmistakable. Only while this seat is actually acting.
+              dimmed={isActive && !handActive}
+            />
+          )
+        })}
       </div>
     </div>
   )

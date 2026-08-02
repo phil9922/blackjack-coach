@@ -20,3 +20,5 @@
 - [x] [1.5h] Count speed-drill mini-game: flash a stream of cards, answer the running count at the end
 - [x] [1h] Sound effects for deal/verdict/level-up with a mute toggle
 - [ ] [4h] Cloud sync for profiles (needs a backend — out of scope for localStorage-only design)
+- [ ] [10m] Rename the table themes before any public release — the palettes and centre devices are original, but the room names are other companies' trademarks. One edit, in `TABLE_THEMES` (`src/table/themes.ts`); nothing else in the codebase references them
+- [ ] [3h] Per-room rule presets to go with the table themes, if wanted — deliberately *not* shipped with the themes, because attaching a rule set to a colour scheme would quietly change what the player is practising against. Needs real sourced rules per property (many real floors deal 6:5), not invented ones

@@ -20,8 +20,14 @@
   --book: #2c6e54;
   --miss: #b3452c;
   --win-pole: #31618f;
-  --card-w: 58px;
-  --card-h: 82px;
+  /** width of the verdict rail; 0 once it stacks below the felt */
+  --rail-w: 360px;
+  /* Default card size, for cards shown away from the table (the speed drill).
+     The table itself overrides this with a seat-aware size — see `.table`.
+     Everything inside a card derives from --card-w, so one number resizes the
+     whole deck. */
+  --card-w: clamp(58px, min(13vh, 26vw), 140px);
+  --card-h: calc(var(--card-w) * 82 / 58);
   --radius: 10px;
   --shadow-card: 0 2px 5px rgba(0, 0, 0, 0.35);
   --display: 'Fraunces', Georgia, 'Times New Roman', serif;
@@ -200,7 +206,7 @@ select:focus-visible {
 }
 
 .rank-chip {
-  background: rgba(201, 162, 39, 0.14);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   border: 1px solid var(--accent-deep);
   color: var(--accent);
   border-radius: 999px;
@@ -248,20 +254,83 @@ select:focus-visible {
 .game {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr) var(--rail-w);
   gap: 0;
   align-items: stretch;
+}
+
+/*
+ * Bound the table view to the viewport.
+ *
+ * The rail and the felt are siblings in a stretch-aligned grid, so without this
+ * the row is sized by whichever is taller — and a rail holding a verdict, a
+ * badge, a coach tip and an AI read is much taller than the felt. The row grew,
+ * the felt stretched to match, and the page turned into a long scroll of empty
+ * green with the cards stranded at the top.
+ *
+ * `min-height: 0` lets these flex/grid children shrink below their content, and
+ * `minmax(0, 1fr)` pins the row to the container instead of the content. The
+ * rail's own `overflow-y: auto` then finally does something: it scrolls itself.
+ *
+ * Scoped to the table screen — Settings, Stats and Skills are documents and
+ * should keep scrolling the page normally.
+ */
+@media (min-width: 901px) {
+  /*
+   * A definite height, not `min-height`. An `fr` row only resolves against a
+   * container whose block size is definite; under `min-height: 100vh` the whole
+   * chain stays auto, `1fr` silently degrades to max-content, and the row sizes
+   * to the rail after all. This one declaration is what makes the rest work.
+   */
+  .app--table {
+    height: 100vh;
+  }
+
+  .main--table {
+    min-height: 0;
+  }
+
+  .main--table .game {
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .main--table .rail {
+    min-height: 0;
+  }
 }
 
 @media (max-width: 900px) {
   .game {
     grid-template-columns: 1fr;
   }
+
+  /* Rail stacks under the felt, so the felt gets the full width. */
+  :root {
+    --rail-w: 0px;
+  }
 }
 
 /* --- the table ------------------------------------------------------------- */
 
 .table {
+  /*
+   * Cards are sized to the room they actually have. `--seats` is set from React;
+   * every seat on the felt takes a share of the width, so a heads-up table deals
+   * big cards and a full table deals smaller ones rather than wrapping into a
+   * second row. The 0.27 leaves each seat enough slack for a third card.
+   *
+   * The felt is the viewport minus the rail — an exact number, not an estimate,
+   * because the rail is a fixed column (--rail-w, which the grid above uses too).
+   * 13vh keeps a short window from dealing cards taller than the felt, and the
+   * clamp bounds it at a readable minimum and a sane maximum.
+   */
+  --card-w: clamp(
+    52px,
+    min(13vh, calc((100vw - var(--rail-w)) * 0.27 / var(--seats, 1))),
+    140px
+  );
+  --card-h: calc(var(--card-w) * 82 / 58);
   position: relative;
   padding: 26px 26px 20px;
   background:
@@ -270,7 +339,95 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  min-height: calc(100vh - 60px);
+  /*
+   * No hardcoded viewport maths. The grid row already stretches this to exactly
+   * the space left under the header, and the old `calc(100vh - 60px)` assumed a
+   * 60px header — which is wrong the moment the header wraps on a narrow window,
+   * over-reserving height and pushing the dock below the fold.
+   */
+  min-height: 0;
+}
+
+/* --- the printed felt ------------------------------------------------------- */
+
+/*
+ * The layout gets its own band in the flex column, between the dealer and the
+ * players. Occupying real space rather than floating behind everything is what
+ * keeps the arc off the cards no matter how many seats or splits are out.
+ */
+.felt-print {
+  /* Shrinkable, not fixed: on a short window the felt has to give this band up
+     before it pushes the action buttons below the fold. */
+  flex: 0 1 auto;
+  height: clamp(64px, 15vh, 200px);
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.felt-print__svg {
+  width: 100%;
+  height: 100%;
+  max-width: 1000px;
+}
+
+.felt-print__payout {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+}
+
+.felt-print__insurance {
+  font-family: var(--display);
+  font-size: 17px;
+  letter-spacing: 0.3em;
+}
+
+/* Set in prose rather than on an arc — it's the fine print, and it has to stay
+   legible while the arcs above it scale with the felt. */
+.felt-print__rule {
+  margin: 2px 0 0;
+  font-family: var(--body);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  opacity: 0.45;
+  text-align: center;
+  padding: 0 12px;
+}
+
+/* Betting spots live at the seats, printed behind each one. */
+.seat {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--felt-print) 16%, transparent);
+}
+
+/*
+ * On a short window the felt runs out of room before the dock does, and the
+ * action buttons must never fall below the fold. The print is the first thing
+ * to give: the arcs stay (they're what make it a table), the fine print goes.
+ */
+@media (max-height: 820px) {
+  .felt-print {
+    height: clamp(56px, 12vh, 130px);
+  }
+
+  .felt-print__rule {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .felt-print {
+    height: clamp(56px, 10vh, 110px);
+  }
+
+  .felt-print__rule {
+    display: none;
+  }
 }
 
 .shuffle-notice {
@@ -380,6 +537,10 @@ select:focus-visible {
   gap: 16px;
   justify-content: center;
   align-items: flex-start;
+  /* The seats row absorbs the felt's spare height; center the row in it so a
+     short table sits mid-felt instead of hugging the dealer with dead green
+     below. align-content (not align-items) is what moves a wrapped line. */
+  align-content: center;
   flex-wrap: wrap;
   flex: 1;
 }
@@ -399,7 +560,14 @@ select:focus-visible {
 
 .seat--active {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 24px rgba(201, 162, 39, 0.25);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 24px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+/* Once a specific split hand is marked, glowing the whole seat as well says the
+   same thing twice and blurs which box actually matters. Let the hand carry it. */
+.seat--active:has(.hand--split.hand--active) {
+  border-color: var(--felt-line);
+  box-shadow: none;
 }
 
 .seat__label {
@@ -427,16 +595,77 @@ select:focus-visible {
 
 .seat__hands {
   display: flex;
-  gap: 12px;
+  gap: 14px;
+  align-items: flex-start;
+  /* Resplitting to four hands can outgrow the felt at large card sizes; wrap
+     rather than push the table into a horizontal scroll. */
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .hand {
-  padding: 4px;
+  padding: 6px;
   border-radius: 10px;
+  /* Transparent by default so turning the border on doesn't shift the layout. */
+  border: 2px solid transparent;
+  transition: opacity 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+/*
+ * Split hands sit side by side, and without a container of their own they read
+ * as one long row of cards — you cannot see where one hand ends and the next
+ * begins. Give each its own boxed-off area, and mark the one in play loudly.
+ */
+.hand--split {
+  border-color: var(--felt-line);
+  background: rgba(0, 0, 0, 0.28);
 }
 
 .hand--active {
-  background: rgba(201, 162, 39, 0.12);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.hand--split.hand--active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Hands waiting their turn recede so the live one carries the eye. */
+.hand--dimmed {
+  opacity: 0.45;
+}
+
+.hand__label {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.hand__index {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.hand--active .hand__index {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.hand__playing {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rail-wood);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 1px 8px;
 }
 
 .hand__meta {
@@ -500,11 +729,11 @@ select:focus-visible {
 .card {
   width: var(--card-w);
   height: var(--card-h);
-  border-radius: 7px;
+  border-radius: calc(var(--card-w) * 0.12);
   background: var(--paper);
   box-shadow: var(--shadow-card);
   position: relative;
-  padding: 5px 6px;
+  padding: calc(var(--card-w) * 0.086) calc(var(--card-w) * 0.103);
   flex-shrink: 0;
   animation: card-in 240ms ease-out;
 }
@@ -580,44 +809,76 @@ select:focus-visible {
 .card__rank {
   font-family: var(--display);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: calc(var(--card-w) * 0.29);
   line-height: 1;
   display: block;
 }
 
 .card__suit {
-  font-size: 0.8rem;
+  font-size: calc(var(--card-w) * 0.22);
   line-height: 1;
 }
 
 .card__pip {
   position: absolute;
-  bottom: 6px;
-  right: 8px;
-  font-size: 1.5rem;
+  bottom: calc(var(--card-w) * 0.103);
+  right: calc(var(--card-w) * 0.138);
+  font-size: calc(var(--card-w) * 0.414);
   opacity: 0.85;
 }
 
 .card--back {
   background:
-    repeating-linear-gradient(45deg, #6e2231 0 6px, #5a1b28 6px 12px);
-  border: 4px solid var(--paper);
+    repeating-linear-gradient(45deg, var(--card-back) 0 6px, var(--card-back-alt) 6px 12px);
+  border: calc(var(--card-w) * 0.069) solid var(--paper);
 }
 
 /* --- dock (controls area) --------------------------------------------------- */
 
+/*
+ * The dock is where you act, so it is never allowed off screen. Sizing the felt
+ * correctly (above) makes overflow rare; sticky makes it impossible. However
+ * tall the content grows — four split hands, five seats, a shuffle notice — the
+ * buttons stay pinned to the bottom of the viewport for as long as the table is
+ * in view, and release normally once you scroll past it to the rail.
+ */
 .dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   min-height: 130px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+  /* Cards passing underneath would otherwise run straight into the buttons. */
+  margin: 0 -26px -20px;
+  padding: 10px 26px 20px;
+  background: linear-gradient(180deg, transparent 0%, var(--felt-deep) 62%);
 }
 
 .dock__waiting {
   color: rgba(255, 255, 255, 0.65);
   font-style: italic;
+}
+
+.dock__hand {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dock__hand strong {
+  color: var(--accent);
+}
+
+.dock__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .controls {
@@ -651,7 +912,8 @@ select:focus-visible {
   box-shadow: 0 2px 0 var(--paper-edge), var(--shadow-card);
 }
 
-.btn--action kbd {
+.btn--action kbd,
+.btn--rewind kbd {
   font-family: var(--mono);
   font-size: 0.7rem;
   color: var(--ink-faint);
@@ -659,6 +921,12 @@ select:focus-visible {
   border-radius: 3px;
   padding: 0 4px;
   margin-left: 4px;
+}
+
+/* On the felt the paper-toned chip disappears; borrow the button's own ink. */
+.btn--rewind:not(.btn--rewind-rail) kbd {
+  color: rgba(255, 255, 255, 0.55);
+  border-color: var(--felt-line);
 }
 
 .btn--primary {
@@ -678,6 +946,41 @@ select:focus-visible {
   color: inherit;
   border: 1px solid currentColor;
   opacity: 0.85;
+}
+
+/* Rewind reads as a quieter, secondary move than the action buttons — it takes
+   something back rather than playing the hand forward. */
+.btn--rewind {
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--felt-line);
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+.btn--rewind:hover {
+  color: var(--paper);
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+/* On the paper rail the felt-toned version would vanish. */
+.btn--rewind-rail {
+  background: transparent;
+  color: var(--ink-soft);
+  border-color: var(--paper-edge);
+}
+
+.btn--rewind-rail:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.verdict__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
 }
 
 .insurance {
@@ -722,30 +1025,25 @@ select:focus-visible {
   gap: 10px;
 }
 
-.bet-controls__advice {
-  background: var(--paper);
-  border-left: 4px solid var(--accent);
-  border-radius: 6px;
-  padding: 10px 14px;
-}
-
-.bet-controls__advice-amount {
-  font-weight: 700;
-  font-family: var(--mono);
-}
-
-.bet-controls__advice-reason {
-  margin: 4px 0 0;
-  font-size: 0.85rem;
-  color: var(--ink-soft);
-}
-
+/*
+ * One row, not three stacked blocks. The suggested-bet card used to sit here as
+ * a slab of paper between the cards and the chips — on a 13" screen that is the
+ * difference between a table you can read and one that feels crowded. The
+ * number now rides on its button and the reasoning went to the rail.
+ */
 .bet-controls__builder {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: center;
   color: var(--paper);
+}
+
+.bet-controls__suggest strong {
+  font-family: var(--mono);
+  color: var(--accent);
+  margin-left: 2px;
 }
 
 .bet-controls__current {
@@ -782,15 +1080,10 @@ select:focus-visible {
   background: #6d4a92;
 }
 
-.bet-controls__actions {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
 .bet-controls__limits {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+  font-family: var(--mono);
 }
 
 .bet-controls__rebuy {
@@ -815,6 +1108,32 @@ select:focus-visible {
     border-left: none;
     border-top: 6px solid var(--rail-wood);
   }
+}
+
+.rail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Asking the coach outright, rather than waiting for it to interrupt. */
+.btn--ask {
+  background: var(--rail-wood);
+  color: var(--paper);
+  border: 1px solid var(--accent-deep);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.btn--ask:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.btn--ask:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .rail__title {
@@ -876,8 +1195,19 @@ select:focus-visible {
 }
 
 .verdict--hint,
-.verdict--coach {
+.verdict--coach,
+.verdict--bet {
   border-left: 4px solid var(--accent);
+}
+
+/* Advice, not a verdict — same family as a hint, quieter stamp. */
+.verdict--bet .verdict__stamp {
+  color: var(--accent-deep);
+}
+
+.verdict--bet .verdict__headline {
+  font-family: var(--mono);
+  font-size: 0.98rem;
 }
 
 .verdict__headline {
@@ -908,18 +1238,53 @@ select:focus-visible {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--accent-deep);
-  background: rgba(201, 162, 39, 0.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
   padding: 2px 10px;
   border-radius: 999px;
 }
 
 .verdict--gamify {
   border-left: 4px solid var(--accent);
-  background: linear-gradient(120deg, var(--paper) 60%, rgba(201, 162, 39, 0.18));
+  background: linear-gradient(120deg, var(--paper) 60%, color-mix(in srgb, var(--accent) 18%, transparent));
 }
 
 .verdict--gamify .verdict__stamp {
   color: var(--accent-deep);
+}
+
+/*
+ * The AI coach is the only card in the rail whose words came from outside the
+ * app — a model wrote them, over the network, on the player's own key. Every
+ * other card is a graded verdict or a locally-computed tip, and they all share
+ * the paper stock. So this one inverts instead of taking another left-border
+ * colour: nothing else on the rail is dark, which makes it unmistakable at a
+ * glance and impossible to read as a verdict on a hand.
+ */
+.verdict--ai {
+  background: linear-gradient(150deg, var(--rail-wood) 0%, #33281b 100%);
+  border-color: var(--accent-deep);
+  border-left: 4px solid var(--accent);
+  color: var(--paper);
+}
+
+/* Filled brass plate, against the outlined stamps every other card uses. */
+.verdict--ai .verdict__stamp {
+  color: var(--rail-wood);
+  background: var(--accent);
+  border-color: var(--accent);
+  letter-spacing: 0.18em;
+}
+
+.verdict--ai .verdict__headline {
+  color: var(--paper);
+}
+
+.verdict--ai .verdict__body {
+  color: rgba(250, 247, 238, 0.84);
+}
+
+.verdict--ai .verdict__note {
+  color: rgba(250, 247, 238, 0.5);
 }
 
 .verdict .btn {
@@ -1445,7 +1810,7 @@ select:focus-visible {
 
 .speed-opt.is-on {
   border-color: var(--accent);
-  background: rgba(201, 162, 39, 0.12);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .speed-opt input {
@@ -1484,10 +1849,9 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
   min-height: 130px;
-}
-
-.speed-run__card .card {
-  transform: scale(1.5);
+  /* Enlarge via the variable, not a transform — a scaled card takes no layout
+     space and would spill out of the modal now that the base card is bigger. */
+  --card-w: clamp(87px, min(12vh, 9vw), 150px);
 }
 
 .speed-run__count {
@@ -1523,7 +1887,7 @@ select:focus-visible {
   opacity: 1;
   filter: none;
   border-color: var(--accent);
-  background: linear-gradient(160deg, var(--paper) 70%, rgba(201, 162, 39, 0.14));
+  background: linear-gradient(160deg, var(--paper) 70%, color-mix(in srgb, var(--accent) 14%, transparent));
 }
 
 .badge__glyph {
@@ -1889,7 +2253,7 @@ select:focus-visible {
   margin: 0 0 12px;
   padding: 10px 12px;
   border-left: 3px solid var(--accent);
-  background: rgba(201, 162, 39, 0.09);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
   border-radius: 0 6px 6px 0;
 }
 
@@ -1900,10 +2264,76 @@ select:focus-visible {
   margin: 4px 0 14px;
 }
 
+/* Felt swatches — pick a room by looking at it, not by reading its name. */
+.table-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
+.table-swatch {
+  position: relative;
+  height: 62px;
+  border-radius: 8px;
+  border: 2px solid var(--paper-edge);
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 120% 90% at 50% 0%, var(--sw-felt) 0%, var(--sw-deep) 100%);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.4);
+}
+
+/* The metal each room trims with, as a band along the bottom. */
+.table-swatch::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: var(--sw-accent);
+}
+
+.table-swatch.is-on {
+  border-color: var(--ink);
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.4),
+    0 0 0 2px var(--paper),
+    0 0 0 4px var(--ink);
+}
+
+.table-swatch__name {
+  position: absolute;
+  inset: 0 0 5px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--paper);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  padding: 0 6px;
+  text-align: center;
+}
+
 .settings__apply {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
   display: flex;
   gap: 14px;
   align-items: center;
+  margin: 24px -16px -60px;
+  padding: 14px clamp(16px, 4vw, 48px);
+  background: linear-gradient(180deg, rgba(238, 233, 219, 0) 0%, var(--paper-dim) 28%);
+  border-top: 1px solid var(--paper-edge);
+}
+
+.settings__apply-hint {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
 }
 
 .settings__saved {
@@ -1915,8 +2345,13 @@ select:focus-visible {
 
 @media (max-width: 700px) {
   :root {
-    --card-w: 46px;
-    --card-h: 66px;
+    --card-w: clamp(44px, 16vw, 78px);
+  }
+
+  /* Same seat-aware share, tuned to a phone's width. A solo table gets cards
+     worth reading; a full one falls to the floor size and wraps, as it must. */
+  .table {
+    --card-w: clamp(40px, calc((100vw - 24px) * 0.32 / var(--seats, 1)), 84px);
   }
 
   /* Compact header: brand+bankroll row, controls row(s), full-width tabs. */
