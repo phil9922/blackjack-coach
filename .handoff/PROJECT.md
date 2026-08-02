@@ -26,8 +26,7 @@ and data-safety decisions should hold up to public users, not just personal tole
   and skipped by `recordDecision`, so taking a move back can never buy back accuracy.
 - **The felt must not lie** — the printed table legends (`BLACKJACK PAYS …`, the soft-17 line, deck
   count, limits) are generated from the live `TableRules`, never hard-coded. A table advertising 3:2
-  while the engine deals 6:5 is the exact trap this app exists to inoculate against. Table themes are
-  cosmetic for the same reason: a room's colours never carry a room's payout schedule.
+  while the engine deals 6:5 is the exact trap this app exists to inoculate against.
 
 ## Constraints
 - Training targets **real casino trips**: rules realism is load-bearing (6D, H17, DAS, no surrender

@@ -63,8 +63,6 @@ Three counting systems are selectable: **Hi-Lo**, **KO** (unbalanced — the sho
 
 **A table that looks like a table.** The felt is printed the way a real one is: the dealer's arc, the insurance line, `BLACKJACK PAYS 3 TO 2`, and the soft-17 rule spelled out where every player can read it. Those legends are generated from the live table rules, never hard-coded — enable late surrender and the felt says so; were the payout ever set to 6:5 it would print `6 TO 5`, and there's a test asserting exactly that. A felt advertising one game while the dealer deals another is the trap this app exists to inoculate against, so the print and the dealer read from one source and can't drift apart.
 
-**Pick your room.** Seven table themes, each an original palette drawn from the colour language of a well-known floor — Card Room, Bellagio, Wynn, The Cosmopolitan, MGM Grand, Mohegan Sun, Caesars Palace. Switching one repaints the felt, the rail, the chips, the card backs and the print together, each with its own centre device. They carry no logos or reproduced artwork, and they are strictly cosmetic: real rooms differ on rules that matter enormously — a 6:5 payout costs more than every counting edge combined — so a colour scheme never quietly changes what you're practising against. Rules stay where you set them.
-
 **Cards sized to the room.** Card size is a share of the felt divided by however many seats are at the table, so a heads-up game deals big, readable cards and a full table shrinks them to fit rather than wrapping into a second row.
 
 **Multiple profiles.** Separate stats, skills, badges, settings, and bankroll per player, with JSON export/import.
@@ -91,7 +89,7 @@ Then open **http://localhost:5175**. No backend, no accounts, no build config to
 The port is pinned deliberately, and `strictPort` makes a collision fail loudly instead of moving the app. Progress lives in `localStorage`, which browsers partition by **origin — including the port**, so a dev server that wandered to whatever port was free would silently strand every profile, stat and badge behind an address you'd have no reason to revisit. If you ever do need a different port, your saved progress stays on the old one; **Settings → Export** is the way to carry it across.
 
 ```bash
-npm test              # 245 tests, fully offline — no API calls, no key needed
+npm test              # 237 tests, fully offline — no API calls, no key needed
 npm run build         # typecheck + production build
 npm run test:coach    # optional: checks the AI coach against the real API (costs money)
 ```
@@ -127,10 +125,9 @@ The interesting engineering problem here isn't the game — it's making sure the
 - **`src/engine/`** — cards, shoe, hand evaluation, H17 dealer logic, payouts, and the multi-seat round state machine. Pure functions with an injectable RNG, so entire rounds are reproducible and testable.
 - **`src/strategy/`** — the chart, stored as composite codes (`Dh` = double else hit, `Rs` = surrender else stand) that resolve against what's *actually legal* for the hand in front of you. A three-card 16 can't surrender, so it grades as a hit; nine-nine with four hands already open falls through to hard 18. Turning surrender on or off needs no special-casing anywhere.
 - **`src/drill/`, `src/stats/`, `src/gamify/`, `src/counting/`, `src/betting/`** — all pure logic, no React.
-- **`src/table/`** — the room palettes, as data. Themes are values, not stylesheets, so a new one is an entry in a list and every token it must define is checked by a test.
 - **`src/components/`** — the UI, which consumes the above through hooks.
 
-Nothing in the logic layers imports React, so all of it is testable without a DOM. The suite covers multi-ace hand evaluation, H17 dealer edge cases, split-to-four and split-aces flows, dealer peek short-circuits, cut-card and count-reset behavior, the exhaustive chart cross-check, deviation index boundaries, drill-mode shoe honesty (the shoe stays a true 312-card multiset after stacking), rewind (the shoe and count unwind exactly, and a rewound decision can't buy back accuracy), the printed felt's legends against the live rules, theme completeness, and coach pattern detection.
+Nothing in the logic layers imports React, so all of it is testable without a DOM. The suite covers multi-ace hand evaluation, H17 dealer edge cases, split-to-four and split-aces flows, dealer peek short-circuits, cut-card and count-reset behavior, the exhaustive chart cross-check, deviation index boundaries, drill-mode shoe honesty (the shoe stays a true 312-card multiset after stacking), rewind (the shoe and count unwind exactly, and a rewound decision can't buy back accuracy), and the printed felt's legends against the live rules, and coach pattern detection.
 
 ---
 

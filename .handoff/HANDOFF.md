@@ -8,12 +8,11 @@ against a verified H17/6D/DAS chart with explanations, hint button, bet advisor,
 counting mode (Hi-Lo / KO / Hi-Opt I, 20 verified Hi-Lo indices, quizzes, speed drill), stats with
 outcome-vs-expectation trends, an 11-rule coaching engine, drill mode (including honest count
 scenarios), gamification (7 skills, XP, ranks, 17 badges), profiles with export/import, and an
-optional Claude-powered AI coach (live + on-demand). 245 unit tests plus Playwright suites, green.
+optional Claude-powered AI coach (live + on-demand). 237 unit tests plus Playwright suites, green.
 
 Since publication the table itself got the attention: cards now size to a share of the felt divided
 by the seat count, the felt is screen-printed with the dealer's arc and rule legends generated from
-the live `TableRules`, and seven room palettes (`src/table/themes.ts`) repaint felt/rail/chips/print
-together. Play gained **rewind** — take back a decision, the whole table unwinds with it, and the
+the live `TableRules`. Play gained **rewind** — take back a decision, the whole table unwinds with it, and the
 grade you earned stands. Split hands are now individually boxed, numbered and dimmed so it is never
 ambiguous which one you are acting on. The dock is `position: sticky` and verified across 11
 viewports × ~27 game states never to leave the viewport.
@@ -56,7 +55,3 @@ need `base: '/blackjack-coach/'`; Vercel and Netlify would not.
   vs GitHub Pages (needs a `base`, and Pages on a private repo needs a paid plan).
 - `img/header-banner.png` is committed but unreferenced — the README uses the SVG. It is kept as a
   raster for a GitHub social preview card, which requires PNG and wants exactly the 2:1 it now is.
-- **Table theme names are real trademarks.** The palettes and centre devices are original — no
-  logos, wordmarks or reproduced artwork — but "Bellagio", "Wynn", "MGM Grand" and the rest are
-  other companies' marks. Fine while the repo is private and personal; rename before any public
-  release. The names exist only in `TABLE_THEMES` (`src/table/themes.ts`), so it is one edit.

@@ -316,7 +316,7 @@ export function GameScreen({
 
         {/* The arc belongs between the dealer and the players, as on a real
             table — giving it its own band means it can never sit under a card. */}
-        <TableLayout rules={state.rules} themeId={state.settings.tableTheme} />
+        <TableLayout rules={state.rules} />
 
         <section className="seats" aria-label="Players">
           {state.seats.map((seat, i) => (

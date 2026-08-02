@@ -17,7 +17,6 @@ import {
   tagValue,
 } from '../counting/systems'
 import type { Availability, GradedDecision, Action } from '../strategy/types'
-import { DEFAULT_TABLE_THEME } from '../table/themes'
 import { gradeDecision, gradeInsurance } from '../strategy/grade'
 import type { AiProfileId } from '../players/profiles'
 import { AI_PROFILES } from '../players/profiles'
@@ -54,11 +53,6 @@ export interface Settings {
    * basic strategy — see src/counting/systems.ts.
    */
   countSystem: CountSystemId
-  /**
-   * Which room's palette to wear. Purely cosmetic — see src/table/themes.ts for
-   * why table rules are deliberately not bundled with it.
-   */
-  tableTheme: string
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -71,7 +65,6 @@ export const DEFAULT_SETTINGS: Settings = {
   soundEnabled: false,
   liveCoach: 'off',
   countSystem: DEFAULT_COUNT_SYSTEM,
-  tableTheme: DEFAULT_TABLE_THEME,
 }
 
 export interface Seat {

@@ -17,6 +17,10 @@
   --ink-faint: #8a8474;
   --accent: #c9a227;
   --accent-deep: #97781a;
+  /* the card back, and the colour the table layout is screen-printed in */
+  --card-back: #6e2231;
+  --card-back-alt: #5a1b28;
+  --felt-print: #e8dfc4;
   --book: #2c6e54;
   --miss: #b3452c;
   --win-pole: #31618f;
@@ -356,6 +360,7 @@ select:focus-visible {
  * keeps the arc off the cards no matter how many seats or splits are out.
  */
 .felt-print {
+  color: var(--felt-print);
   /* Shrinkable, not fixed: on a short window the felt has to give this band up
      before it pushes the action buttons below the fold. */
   flex: 0 1 auto;
@@ -2262,60 +2267,6 @@ select:focus-visible {
   color: var(--ink-soft);
   line-height: 1.5;
   margin: 4px 0 14px;
-}
-
-/* Felt swatches — pick a room by looking at it, not by reading its name. */
-.table-swatches {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 10px;
-  margin: 4px 0 14px;
-}
-
-.table-swatch {
-  position: relative;
-  height: 62px;
-  border-radius: 8px;
-  border: 2px solid var(--paper-edge);
-  padding: 0;
-  overflow: hidden;
-  background:
-    radial-gradient(ellipse 120% 90% at 50% 0%, var(--sw-felt) 0%, var(--sw-deep) 100%);
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.4);
-}
-
-/* The metal each room trims with, as a band along the bottom. */
-.table-swatch::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 5px;
-  background: var(--sw-accent);
-}
-
-.table-swatch.is-on {
-  border-color: var(--ink);
-  box-shadow:
-    inset 0 0 18px rgba(0, 0, 0, 0.4),
-    0 0 0 2px var(--paper),
-    0 0 0 4px var(--ink);
-}
-
-.table-swatch__name {
-  position: absolute;
-  inset: 0 0 5px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--display);
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--paper);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-  padding: 0 6px;
-  text-align: center;
 }
 
 .settings__apply {
