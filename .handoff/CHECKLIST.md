@@ -20,3 +20,7 @@
 - [x] [1.5h] Count speed-drill mini-game: flash a stream of cards, answer the running count at the end
 - [x] [1h] Sound effects for deal/verdict/level-up with a mute toggle
 - [ ] [4h] Cloud sync for profiles (needs a backend — out of scope for localStorage-only design)
+- [ ] [5m] Flip the repo to public (`gh repo edit --visibility public`) — secrets checked clean; the trademark blocker is gone now that the casino themes are removed
+- [ ] [20m] Recapture `docs/coach.png` and `docs/skills.png` from a real played-in profile — needs a `Settings → Export` file from the owner's browser; the import-and-capture script is written and tested
+- [ ] [30m] Decide whether `liveCoach` should default to off now that the rail can ask on demand — every ~8 hands it bills a call that the prompt tells it to answer with silence
+- [ ] [30m] Bottom padding on `.seats` so they can scroll clear of the sticky dock on short windows (currently the dock occludes them at some scroll positions)

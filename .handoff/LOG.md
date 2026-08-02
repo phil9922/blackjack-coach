@@ -1,5 +1,58 @@
 # Log
 
+## 2026-08-02
+- **Rewind** (`e2c3e66`) — `Z` or a button in the dock and rail takes back a decision and unwinds
+  the whole table: shoe position, running count, hole card, bets, splits. New `REWIND` action and
+  `rewind`/`replayCredits` in `GameState` (`src/engine/game.ts`), `RewindButton.tsx`. The grade
+  already earned stands: the replay is marked `replayed` (`src/strategy/types.ts`) and skipped by
+  `recordDecision` (`useGame.ts`), so taking a move back can never buy back accuracy. 9 tests.
+- **Printed felt** (`e2c3e66`) — `TableLayout.tsx` draws the dealer's arc, insurance line, payout
+  legend and soft-17 rule in its own band between dealer and players. Legends are generated from
+  the live `TableRules`, so the felt can never advertise a game the dealer isn't dealing; 4 tests
+  pin that.
+- **Card sizing** (`e2c3e66`) — `--card-w` is now a share of the felt divided by `--seats`, so a
+  heads-up table deals 140px cards and a full table shrinks rather than wrapping. Everything inside
+  a card derives from it.
+- **Pinned the dev server to 5175** with `strictPort` (`vite.config.ts`). `localStorage` is
+  partitioned by origin *including the port*, so a wandering dev server was silently stranding
+  saved profiles behind an address with no reason to revisit. Diagnosed after the port had already
+  drifted 5173 → 5175 this session.
+- **Layout fixes** (`e2c3e66`) — the dock is `position: sticky` and no longer relies on
+  `calc(100vh - 60px)`, which assumed a 60px header and was wrong by up to 110px once it wrapped;
+  verified across 11 viewports × ~27 game states. Split hands are individually boxed, numbered and
+  dimmed. "Got it — continue" added to the dock. Suggested-bet reasoning moved from a slab between
+  the cards and the chips to the verdict rail (dock 239px → 130px); Apply settings is a sticky bar.
+- **Bounded the table view to the viewport** (`e2c3e66`) — a long verdict rail was sizing the grid
+  row and stretching the felt with it (2638px felt, 1796px of page scroll with 10 cards). Root
+  cause was that an `fr` row needs a *definite* height and `min-height: 100vh` is not one, so `1fr`
+  degraded to max-content. `.app--table { height: 100vh }` fixed it; rail now scrolls itself.
+- **Dropped the casino table themes** (`2fcc660`) — seven room palettes shipped in `e2c3e66`, then
+  came out before going public: the palettes were original but the names were other companies'
+  trademarks, visible in Settings and the README. Removed the whole system (`src/table/`, the
+  `tableTheme` setting, the picker) rather than renaming, since a one-option picker is dead UI. The
+  printed felt stays.
+- **Ask the AI coach a question** (`d9b27fe`) — the rail button now opens a modal prefilled with
+  "Review my recent play…", selected so typing replaces it, plus five presets. New
+  `askCoachQuestion` in `coach-ai/client.ts` with a prompt pinned to the question; both prose calls
+  now share one request path so the browser flag, fallback beta and error mapping can't drift.
+  Nothing fires until Ask is pressed. Also found that live coaching was billing a call every ~8
+  hands to usually say nothing — its prompt tells it "most updates should return an empty string".
+- **Hand log export** (`845a142`) — Settings → Hand log writes CSV or JSON: one row per settled
+  hand with dealer upcard, starting hand, bet, result, net and the round's decisions vs the book.
+  New `src/stats/handLog.ts`, 10 tests. Reassembles rounds from timestamps since nothing carries a
+  round id. Surfaced two limits in the UI rather than hiding them: splits share their round's
+  decisions, and history is capped at 1000 decisions / 2000 hands so old rounds are already gone.
+- **Docs** — README updated for the printed felt, card sizing, rewind, hand log, the pinned port
+  and the test count (224 → 247). `docs/table.png` regenerated; `coach.png`/`skills.png`
+  deliberately left alone after checking `git diff` showed zero changes to those screens.
+- **Not done: the repo is still private.** Asked to publish, I paused on the trademark names; the
+  owner chose to delete the themes instead. Visibility has not been changed.
+- **Not done: screenshots from the owner's own session.** Their profile lives in a running Chrome's
+  `localStorage`, unflushed to disk; a driven browser gets an empty one. A LevelDB read was blocked
+  by the permission classifier and a 30-minute watcher for a `Settings → Export` file timed out.
+  The import-and-capture pipeline is written and tested (`from_export.py`) and needs only the file.
+
+
 ## 2026-08-01
 - **Published the repo** as `phil9922/blackjack-coach` — **private**, at the owner's request
   (`18f2ce3`, pushed). Added MIT `LICENSE`, a `license` field in `package.json`, and a README

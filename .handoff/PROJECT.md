@@ -85,4 +85,15 @@ using it at a table.
   deployed anywhere. The repo is private and the app is single-player and client-only, so a public
   URL would add an attack surface and a maintenance burden for no benefit. Revisit only if the repo
   goes public.
-
+- 2026-08-02 — Casino-branded table themes were built and then removed before publishing. The
+  palettes and centre devices were original, but the room names were other companies' trademarks
+  shown in Settings and the README, and this repo goes out under the owner's name. Removed the whole
+  system rather than renaming: a picker with one option is dead UI, and the printed felt — the part
+  that actually made it look like a table — is independent of it.
+- 2026-08-02 — Rewind keeps the grade. Taking a decision back restores the shoe, count and bets
+  exactly, but the original grade stays on the record and the replay is excluded from stats. A
+  rewind buys the lesson, never the accuracy; anything else would let the trainer be gamed into
+  flattering numbers, which is the failure this project exists to prevent.
+- 2026-08-02 — The dev server port is configuration, not preference. `localStorage` is partitioned
+  by origin *including the port*, so a dev server free to wander silently strands saved profiles.
+  Pinned to 5175 with `strictPort` so a collision fails loudly instead of relocating the app.

@@ -1,57 +1,50 @@
 # Handoff
 
 ## Current focus
-Published and feature-complete. The repo is live at
-[`phil9922/blackjack-coach`](https://github.com/phil9922/blackjack-coach) — **private**, MIT
-licensed, description and 12 topics set, `main` pushed. React + Vite + TS; grades every decision
-against a verified H17/6D/DAS chart with explanations, hint button, bet advisor, AI table-mates,
-counting mode (Hi-Lo / KO / Hi-Opt I, 20 verified Hi-Lo indices, quizzes, speed drill), stats with
-outcome-vs-expectation trends, an 11-rule coaching engine, drill mode (including honest count
-scenarios), gamification (7 skills, XP, ranks, 17 badges), profiles with export/import, and an
-optional Claude-powered AI coach (live + on-demand). 237 unit tests plus Playwright suites, green.
+Feature-complete and committed on `main`; **the repo is still private**. React + Vite + TS. Grades
+every decision against a verified H17/6D/DAS chart with explanations, hint button, bet advisor, AI
+table-mates, counting mode (Hi-Lo / KO / Hi-Opt I), stats, an 11-rule coaching engine, drill mode,
+gamification, profiles with export/import, and an optional Claude coach. 247 unit tests, green.
 
-Since publication the table itself got the attention: cards now size to a share of the felt divided
-by the seat count, the felt is screen-printed with the dealer's arc and rule legends generated from
-the live `TableRules`. Play gained **rewind** — take back a decision, the whole table unwinds with it, and the
-grade you earned stands. Split hands are now individually boxed, numbered and dimmed so it is never
-ambiguous which one you are acting on. The dock is `position: sticky` and verified across 11
-viewports × ~27 game states never to leave the viewport.
-
-Every checklist item is now done except two that need something this machine doesn't have: a real
-Claude API key, and a backend.
+This session was all table and presentation: **rewind** (take a decision back, the shoe and count
+unwind with it, the grade stands), a **printed felt** whose legends are generated from the live
+rules, **seat-aware card sizing**, a **sticky dock** verified never to leave the viewport, the
+**table view bounded to the viewport** so a long rail scrolls itself instead of stretching the felt,
+an **ask-the-coach modal**, and a **hand log export** (CSV/JSON). Seven casino table themes shipped
+and were then deliberately removed before publishing — see Decisions.
 
 ## Blockers
-None. The dev server is pinned to **5175** in `vite.config.ts` (`strictPort: true`) — run plain
-`npm run dev` and point browser tests at :5175. The old "use `--port 5199`" instruction is obsolete;
-the port is now part of the config precisely because saved progress is per-origin.
+None in the code. Two things are waiting on the owner, not on work:
+- **Publishing.** `gh repo edit --visibility public` is the whole job. `.env` is untracked, ignored,
+  and no `sk-ant-` string appears in any commit across the full history (checked).
+- **Screenshots from a real profile.** `docs/coach.png` and `docs/skills.png` still show an older
+  profile. Capturing from the owner's own requires them to press **Settings → Player profiles →
+  Export**; their data is in a running Chrome's `localStorage` and is not on disk, and a driven
+  browser gets an empty profile. The import-and-capture script is written and tested — it needs only
+  the `.bjt-profile.json`.
+
+The dev server is pinned to **5175** (`vite.config.ts`, `strictPort`). Run plain `npm run dev`; the
+old `--port 5199` instruction is obsolete.
 
 ## Next step
-Nothing is outstanding. **Further work should come from actually using the app at a table** rather
-than from this checklist — the remaining P2s are a verification chore and two things that need a
-backend or a transcription session, not features the app is missing.
+Nothing is outstanding in the code. Publish when ready, then let further work come from **actually
+using the app at a table** — the remaining checklist items are a transcription chore and things
+needing a backend, not features the app is missing.
 
-`.env` in the project root holds the Claude API key (gitignored, and confirmed absent from the
-production bundle). `npm test` stays offline and free; `npm run test:coach` is the paid live check.
-
-**Nothing is deployed and no hosting is configured** — no workflow, no `vercel.json`/`netlify.toml`,
-no `base` set in `vite.config.ts`. `npm run build` then `npm run preview` serves the production
-bundle at <http://localhost:4173/>, local-only. A subpath host like GitHub Pages would additionally
-need `base: '/blackjack-coach/'`; Vercel and Netlify would not.
+`.env` holds the Claude API key (gitignored, confirmed absent from the bundle). `npm test` is
+offline and free; `npm run test:coach` is the paid live check. Nothing is deployed.
 
 ## Open questions
-- The AI coach's output was verified good over four live runs and needed no prompt changes. Two
-  cosmetic drifts if they ever start to grate: the on-demand read runs ~340-365 words against a
-  200-350 word instruction, and live details run 40-70 words against "one or two sentences".
-- The KO key count and pivot in `src/counting/systems.ts` come from the standard published KO
-  tables and are locked by tests, but unlike the strategy chart they have **not** been
-  double-transcribed against an independent second source. They only steer bet size, never a play
-  decision. Worth giving them fixture coverage like `src/strategy/__fixtures__`?
-- Ship verified KO / Hi-Opt I index sets so deviation grading works there too? That is the only
-  thing currently missing from those systems, and it is a transcription-and-verification job, not a
-  coding one.
+- **Live coaching bills a call every ~8 hands to usually say nothing.** Its prompt tells the model
+  "most updates should return an empty string", so silence is by design — but each silent check is
+  paid. Now that the rail has an on-demand ask, is `liveCoach: 'off'` the better default?
+- The KO key count and pivot in `src/counting/systems.ts` are locked by tests but, unlike the
+  strategy chart, have not been double-transcribed against an independent second source. They steer
+  bet size only, never a play.
+- Ship verified KO / Hi-Opt I index sets so deviation grading works there too? Transcription and
+  verification work, not coding.
 - Cloud-synced profiles need a backend, which the client-side-only constraint rules out.
-- Repo is private — flip it public later, or keep it personal? Hosting was declined this session in
-  favour of a local build; if that changes, the target choice is Vercel/Netlify (no config change)
-  vs GitHub Pages (needs a `base`, and Pages on a private repo needs a paid plan).
-- `img/header-banner.png` is committed but unreferenced — the README uses the SVG. It is kept as a
-  raster for a GitHub social preview card, which requires PNG and wants exactly the 2:1 it now is.
+- The sticky dock can occlude the bottom of the felt when content overflows a short window. Content
+  is still reachable by scrolling. Worth adding bottom padding so seats always clear it?
+- `img/header-banner.png` is committed but unreferenced — kept as a raster for a GitHub social
+  preview card, which requires PNG at 2:1.
