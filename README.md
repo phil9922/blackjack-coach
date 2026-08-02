@@ -67,6 +67,8 @@ Three counting systems are selectable: **Hi-Lo**, **KO** (unbalanced — the sho
 
 **Multiple profiles.** Separate stats, skills, badges, settings, and bankroll per player, with JSON export/import.
 
+**Exportable hand log.** Every hand the profile has played — one CSV row per settled hand with the dealer upcard, your starting hand, the bet, the result, the net, and the round's decisions with whether each matched the book. Splits are grouped into a single round, hinted and drilled plays are tagged, and if the history cap has started discarding old rounds the export says so rather than quietly handing you a partial log.
+
 ---
 
 ## Table rules
@@ -89,7 +91,7 @@ Then open **http://localhost:5175**. No backend, no accounts, no build config to
 The port is pinned deliberately, and `strictPort` makes a collision fail loudly instead of moving the app. Progress lives in `localStorage`, which browsers partition by **origin — including the port**, so a dev server that wandered to whatever port was free would silently strand every profile, stat and badge behind an address you'd have no reason to revisit. If you ever do need a different port, your saved progress stays on the old one; **Settings → Export** is the way to carry it across.
 
 ```bash
-npm test              # 237 tests, fully offline — no API calls, no key needed
+npm test              # 247 tests, fully offline — no API calls, no key needed
 npm run build         # typecheck + production build
 npm run test:coach    # optional: checks the AI coach against the real API (costs money)
 ```

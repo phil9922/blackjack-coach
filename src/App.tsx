@@ -158,7 +158,9 @@ export default function App() {
         {screen === 'progress' && (
           <ProgressScreen stats={stats} state={state} dispatch={dispatch} coach={coach} />
         )}
-        {screen === 'settings' && <SettingsScreen state={state} dispatch={dispatch} />}
+        {screen === 'settings' && (
+          <SettingsScreen state={state} dispatch={dispatch} stats={stats.stats} />
+        )}
       </main>
     </div>
   )

@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import type { GameState, GameAction, Settings, AiSeatConfig } from '../engine/game'
 import type { TableRules } from '../engine/rules'
+import type { StatsState } from '../stats/model'
 import { AI_PROFILES, AI_NAMES, type AiProfileId } from '../players/profiles'
 import {
   COUNT_SYSTEM_LIST,
   getCountSystem,
   type CountSystemId,
 } from '../counting/systems'
+import { buildHandLog, handLogToCsv } from '../stats/handLog'
+import { DECISION_CAP, OUTCOME_CAP } from '../stats/model'
 import {
   savePersisted,
   getProfiles,
@@ -20,6 +23,18 @@ import {
   loadApiKey,
   saveApiKey,
 } from '../stats/storage'
+
+function download(filename: string, body: string, type: string) {
+  const blob = new Blob([body], { type })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+const stamp = () => new Date().toISOString().slice(0, 10)
 
 function downloadProfile(id: string, name: string) {
   const data = exportProfile(id)
@@ -36,9 +51,11 @@ function downloadProfile(id: string, name: string) {
 export function SettingsScreen({
   state,
   dispatch,
+  stats,
 }: {
   state: GameState
   dispatch: React.Dispatch<GameAction>
+  stats: StatsState
 }) {
   const [rules, setRules] = useState<TableRules>(state.pendingRules ?? state.rules)
   const [settings, setSettings] = useState<Settings>(state.pendingSettings ?? state.settings)
@@ -53,6 +70,9 @@ export function SettingsScreen({
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  const log = buildHandLog(stats)
+  const hasLog = log.rounds.length > 0
 
   const setAiCount = (n: number) => {
     const seats: AiSeatConfig[] = Array.from({ length: n }, (_, i) => ({
@@ -291,6 +311,51 @@ export function SettingsScreen({
           in this browser can read it, and usage bills to your account. Use a key scoped to this
           purpose, and remove it here when you're done. It is never included in profile exports.
         </p>
+      </fieldset>
+
+      <fieldset className="settings__group">
+        <legend>Hand log</legend>
+        <p className="settings__fixed">
+          Every hand this profile has played, how you played it, and what it cost — one row per
+          settled hand, with the round's decisions and whether each matched the book.
+        </p>
+        <div className="settings__row">
+          <button
+            className="btn btn--ghost"
+            disabled={!hasLog}
+            onClick={() =>
+              download(`blackjack-hand-log-${stamp()}.csv`, handLogToCsv(log), 'text/csv')
+            }
+          >
+            Export hand log (CSV)
+          </button>
+          <button
+            className="btn btn--ghost"
+            disabled={!hasLog}
+            onClick={() =>
+              download(
+                `blackjack-hand-log-${stamp()}.json`,
+                JSON.stringify(log, null, 2),
+                'application/json'
+              )
+            }
+          >
+            Export as JSON
+          </button>
+          <span className="settings__saved">
+            {hasLog
+              ? `${log.rounds.length} rounds recorded`
+              : 'Play a hand or two first — nothing recorded yet.'}
+          </span>
+        </div>
+        {log.truncated && (
+          <p className="settings__warn">
+            <strong>This log is the recent past, not all of it.</strong> History is capped at
+            {' '}{DECISION_CAP} decisions and {OUTCOME_CAP} hands per profile, and this profile has
+            reached that, so its oldest rounds have already been discarded. Export periodically if
+            you want to keep the whole run.
+          </p>
+        )}
       </fieldset>
 
       <fieldset className="settings__group">
