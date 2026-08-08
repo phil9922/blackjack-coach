@@ -13,6 +13,9 @@ import type { Rank } from '../engine/types'
  *
  * Do not flip `supportsDeviations` on for a system without transcribing and
  * testing its index set the way `src/strategy/__fixtures__` does for the chart.
+ * `docs/index-set-sourcing.md` records which sources were already checked for
+ * KO and Hi-Opt I, why none of them clears that bar, and what would unblock it —
+ * read it before spending another afternoon looking.
  */
 
 export type CountSystemId = 'hilo' | 'ko' | 'hiopt1'
@@ -142,14 +145,13 @@ export function initialRunningCount(system: CountSystem, decks: number): number 
  * table, not a formula: interpolating the published values is an approximation,
  * so a shoe size that isn't listed rounds to the nearest listed one.
  *
- * NOTE: unlike the strategy chart, these have not been double-transcribed
- * against an independent second source. They only steer bet SIZE, never a play
- * decision, so a small error costs expectation rather than teaching a wrong
- * move — but treat them as unverified until they get fixture coverage.
+ * Both numbers are locked by `__fixtures__/ko-reference.ts`, transcribed from
+ * published sources independently of this file. Don't edit them here without
+ * re-sourcing the fixture — the whole point is that the two were written apart.
  */
 export const KO_PIVOT = 4
 
-const KO_KEY_COUNTS: Record<number, number> = { 1: 2, 2: 1, 6: -4, 8: -6 }
+const KO_KEY_COUNTS: Record<number, number> = { 1: 2, 2: 1, 4: -1, 6: -4, 8: -6 }
 
 export function koKeyCount(decks: number): number {
   const listed = KO_KEY_COUNTS[decks]

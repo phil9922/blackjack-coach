@@ -13,8 +13,8 @@
 - [x] [45m] Hole-card flip animation and win/loss chip payout animation (respecting prefers-reduced-motion)
 
 ## P2 — Extras
-- [ ] [2h] Double-transcribe the KO key count / pivot in `src/counting/systems.ts` against an independent second source and add fixture coverage, the way `src/strategy/__fixtures__` locks the chart — they only steer bet size, never a play, so this is lower stakes than the chart but currently the one unverified number in the app
-- [ ] [4h] Ship verified KO / Hi-Opt I deviation index sets so index plays grade in those systems too (transcription + verification work, not coding — the `supportsDeviations` flag is already the switch)
+- [x] [2h] Double-transcribe the KO key count / pivot in `src/counting/systems.ts` against an independent second source and add fixture coverage — done: `src/counting/__fixtures__/ko-reference.ts` + `ko-reference.test.ts`, 28 tests. Found and fixed a real gap: the published 4-deck key count (-1) was missing from the table, so `koKeyCount(4)` resolved to the six-deck -4. Tags, IRC, key counts and pivot otherwise all checked out
+- [ ] [BLOCKED — needs a book, not an afternoon] Ship verified KO / Hi-Opt I deviation index sets so index plays grade in those systems too. Researched 2026-08-08: no open-web source clears the project's two-source bar, and free reproductions contradict each other on cells as central as Hi-Opt I 16 v 10. Full findings and the two unblocking routes in `docs/index-set-sourcing.md`. Needs Humble & Cooper ch. 8 + p. 263 (Hi-Opt I) and the KO Preferred matrix (KO); KO also needs a running-count grading path, since it has no true count
 - [x] [30m] Offer "even money" wording when the player has blackjack vs a dealer ace (currently shows the generic insurance prompt)
 - [x] [2h] Additional counting systems (KO, Hi-Opt I) selectable in settings, with matching true-count handling — shipped with deviation grading disabled for the non-Hi-Lo systems, per the constraint
 - [x] [1.5h] Count speed-drill mini-game: flash a stream of cards, answer the running count at the end
