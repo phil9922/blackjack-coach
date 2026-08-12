@@ -8,37 +8,44 @@
   and no key-shaped string (`sk-ant-[A-Za-z0-9_-]{20,}`) anywhere in full history or in `dist/`.
   The `sk-ant-` hits that do exist are the Settings input placeholder and a rejected-key error
   message — source, not secrets.
-- **Untracked `.handoff/.state.json`** (`59ec206`) — 29KB of tooling exhaust carrying ~40
+- **Untracked `.handoff/.state.json`** (`814790e`) — 29KB of tooling exhaust carrying ~40
   `/tmp/claude-1000/…` scratchpad paths, 18 `/home/pk` paths and a log of shell commands. Now
   gitignored in `.gitignore` rather than only `.git/info/exclude`, which isn't shared. The four
-  `.handoff/*.md` files stay tracked deliberately — they read as an engineering log. Old versions
-  of `.state.json` remain in history; nothing secret in them, so history was left unrewritten
-  rather than force-pushing over a published repo.
-- **Docs readied for strangers** (`59ec206`) — README now links `docs/index-set-sourcing.md` from
+  `.handoff/*.md` files stay tracked deliberately — they read as an engineering log.
+- **Scrubbed `.state.json` out of history entirely** — untracking only moved the tip, so
+  `git filter-branch --index-filter --prune-empty` removed the path from all 45 commits, verified by
+  walking every commit tree on `main` (0 hits) rather than trusting the filter's output. Done while
+  the repo had 0 forks and 0 stars, which is the only cheap moment for it. Two consequences worth
+  knowing: every commit from `022268a` onward got a new hash, and one commit ("Update handoff
+  state") disappeared because `.state.json` was its entire content. The 23 commit citations in this
+  log were remapped old→new by matching author date + subject, and each rewritten hash was checked
+  to resolve in the new history. Pre-rewrite state is bundled at
+  `scratchpad/pre-scrub-backup.bundle` for this session.
+- **Docs readied for strangers** (`814790e`) — README now links `docs/index-set-sourcing.md` from
   the counting-systems paragraph so "only Hi-Lo grades deviations" carries its receipts, names the
   stack and the Node floor, corrects 247 → 275 tests, and adds a Status and contributing section
   whose one hard rule is that any change to the chart, the indices or a system's numbers arrives
   with a source and passes the fixtures. Every numeric claim in the README was re-checked against
   the source first — 20 deviations, 7 skills, 17 achievements, 11 coach rules, 36 hand-written
   explanations, 4 AI personas, max 4 seats — and all of them held.
-- **Revisited the no-hosting decision** (`59ec206`) — it was explicitly conditioned on "revisit if
+- **Revisited the no-hosting decision** (`814790e`) — it was explicitly conditioned on "revisit if
   the repo goes public", and that trigger just fired. Still no hosting, now recorded as a live
   choice rather than a consequence of privacy: `npm run build` emits a static `dist/`, so it is a
   five-minute reversal whenever a demo is actually wanted.
 
 ## 2026-08-08
-- **Double-transcribed KO's betting numbers and locked them** (`b65ef4d`) — new
+- **Double-transcribed KO's betting numbers and locked them** (`38174c5`) — new
   `src/counting/__fixtures__/ko-reference.ts` carries the tags, per-deck IRC, key counts and pivot
   re-transcribed from published sources without reading `systems.ts`, and
   `src/counting/ko-reference.test.ts` asserts the two agree (28 tests, suite 247 → 275). The
   fixture header states that all published KO tables descend from one book (Fuchs & Vancura), so
   what is independent is the transcription path, not the derivation.
-- **Found and fixed a real gap while doing it** (`b65ef4d`) — the published four-deck key count
+- **Found and fixed a real gap while doing it** (`38174c5`) — the published four-deck key count
   (-1) was missing from `KO_KEY_COUNTS`, so `koKeyCount(4)` fell through the nearest-listed rule
   and resolved to the six-deck -4. The app deals six decks so nothing shipped wrong, but the
   function is exported and would have been wrong the moment deck count became configurable.
   Regression test pins it. Tags, IRC, the other key counts and the +4 pivot all checked out.
-- **Researched the KO / Hi-Opt I deviation index sets and stopped rather than guess** (`b65ef4d`) —
+- **Researched the KO / Hi-Opt I deviation index sets and stopped rather than guess** (`38174c5`) —
   no open-web source clears the project's two-source bar. Hi-Opt I's indices live in Humble &
   Cooper ch. 8 plus the H17 modifications on p. 263 and in DeepNet's paid database, whose public
   PDF documents an index set matching our exact rules but prints none of its numbers; the free
@@ -51,43 +58,43 @@
   unbalanced systems. Supporting KO means changing the grading path, not adding a table.
 
 ## 2026-08-02
-- **Rewind** (`e2c3e66`) — `Z` or a button in the dock and rail takes back a decision and unwinds
+- **Rewind** (`9c10437`) — `Z` or a button in the dock and rail takes back a decision and unwinds
   the whole table: shoe position, running count, hole card, bets, splits. New `REWIND` action and
   `rewind`/`replayCredits` in `GameState` (`src/engine/game.ts`), `RewindButton.tsx`. The grade
   already earned stands: the replay is marked `replayed` (`src/strategy/types.ts`) and skipped by
   `recordDecision` (`useGame.ts`), so taking a move back can never buy back accuracy. 9 tests.
-- **Printed felt** (`e2c3e66`) — `TableLayout.tsx` draws the dealer's arc, insurance line, payout
+- **Printed felt** (`9c10437`) — `TableLayout.tsx` draws the dealer's arc, insurance line, payout
   legend and soft-17 rule in its own band between dealer and players. Legends are generated from
   the live `TableRules`, so the felt can never advertise a game the dealer isn't dealing; 4 tests
   pin that.
-- **Card sizing** (`e2c3e66`) — `--card-w` is now a share of the felt divided by `--seats`, so a
+- **Card sizing** (`9c10437`) — `--card-w` is now a share of the felt divided by `--seats`, so a
   heads-up table deals 140px cards and a full table shrinks rather than wrapping. Everything inside
   a card derives from it.
 - **Pinned the dev server to 5175** with `strictPort` (`vite.config.ts`). `localStorage` is
   partitioned by origin *including the port*, so a wandering dev server was silently stranding
   saved profiles behind an address with no reason to revisit. Diagnosed after the port had already
   drifted 5173 → 5175 this session.
-- **Layout fixes** (`e2c3e66`) — the dock is `position: sticky` and no longer relies on
+- **Layout fixes** (`9c10437`) — the dock is `position: sticky` and no longer relies on
   `calc(100vh - 60px)`, which assumed a 60px header and was wrong by up to 110px once it wrapped;
   verified across 11 viewports × ~27 game states. Split hands are individually boxed, numbered and
   dimmed. "Got it — continue" added to the dock. Suggested-bet reasoning moved from a slab between
   the cards and the chips to the verdict rail (dock 239px → 130px); Apply settings is a sticky bar.
-- **Bounded the table view to the viewport** (`e2c3e66`) — a long verdict rail was sizing the grid
+- **Bounded the table view to the viewport** (`9c10437`) — a long verdict rail was sizing the grid
   row and stretching the felt with it (2638px felt, 1796px of page scroll with 10 cards). Root
   cause was that an `fr` row needs a *definite* height and `min-height: 100vh` is not one, so `1fr`
   degraded to max-content. `.app--table { height: 100vh }` fixed it; rail now scrolls itself.
-- **Dropped the casino table themes** (`2fcc660`) — seven room palettes shipped in `e2c3e66`, then
+- **Dropped the casino table themes** (`142d5e8`) — seven room palettes shipped in `9c10437`, then
   came out before going public: the palettes were original but the names were other companies'
   trademarks, visible in Settings and the README. Removed the whole system (`src/table/`, the
   `tableTheme` setting, the picker) rather than renaming, since a one-option picker is dead UI. The
   printed felt stays.
-- **Ask the AI coach a question** (`d9b27fe`) — the rail button now opens a modal prefilled with
+- **Ask the AI coach a question** (`e00019e`) — the rail button now opens a modal prefilled with
   "Review my recent play…", selected so typing replaces it, plus five presets. New
   `askCoachQuestion` in `coach-ai/client.ts` with a prompt pinned to the question; both prose calls
   now share one request path so the browser flag, fallback beta and error mapping can't drift.
   Nothing fires until Ask is pressed. Also found that live coaching was billing a call every ~8
   hands to usually say nothing — its prompt tells it "most updates should return an empty string".
-- **Hand log export** (`845a142`) — Settings → Hand log writes CSV or JSON: one row per settled
+- **Hand log export** (`4c59697`) — Settings → Hand log writes CSV or JSON: one row per settled
   hand with dealer upcard, starting hand, bet, result, net and the round's decisions vs the book.
   New `src/stats/handLog.ts`, 10 tests. Reassembles rounds from timestamps since nothing carries a
   round id. Surfaced two limits in the UI rather than hiding them: splits share their round's
@@ -105,10 +112,10 @@
 
 ## 2026-08-01
 - **Published the repo** as `phil9922/blackjack-coach` — **private**, at the owner's request
-  (`18f2ce3`, pushed). Added MIT `LICENSE`, a `license` field in `package.json`, and a README
+  (`36e5c2d`, pushed). Added MIT `LICENSE`, a `license` field in `package.json`, and a README
   license section; GitHub detects MIT and all 12 topics from CHECKLIST.md are set. Also untracked
   `tsconfig.tsbuildinfo` and `.claude-swarm-feed.log` (local build/tooling output) and ignored them.
-- **Added KO and Hi-Opt I counting systems** (`dbc035d`), the last open P2 of any size. New
+- **Added KO and Hi-Opt I counting systems** (`05f69a0`), the last open P2 of any size. New
   `src/counting/systems.ts` holds tag values, balance, IRC and a `supportsDeviations` flag;
   `Settings.countSystem` threads through `game.ts` (draw, reveal, reshuffle, drill burns), the
   quiz, speed drill, bet advisor and drill planner. Only Hi-Lo keeps deviation grading — the other
@@ -125,7 +132,7 @@
   the running count always equals the IRC plus exactly the face-up cards, for all three systems.
   Both new test groups were mutation-checked (broke a tag value, then the hole-card rule) to
   confirm they actually bite.
-- Added the header banner to the README and cropped it (`d570097`, `4d7ef22`, `e6e1153`). Used
+- Added the header banner to the README and cropped it (`4c462a8`, `263714b`, `0ffd06f`). Used
   `img/header-banner.svg` over the 766K PNG — verified it renders identically by rasterizing it the
   way GitHub does (as an `<img>`, not inlined) — then cropped its viewBox from 1310x760 to the
   1280x640 green panel, which removed the white margin and clipped the two decorative circles that
@@ -152,7 +159,7 @@
   needs `COACH_LIVE=1` via `npm run test:coach`; and the "did the fixed leak leave needsWork" check
   was removed as untestable by regex, since an over-doubling item that contrasts itself with the
   now-fixed soft doubles matches any /soft/+/doubl/ pattern.
-- **Built a live-API quality harness for the AI coach** (`7052acc`): `src/coach-ai/real-api.test.ts`,
+- **Built a live-API quality harness for the AI coach** (`5e179fb`): `src/coach-ai/real-api.test.ts`,
   skipped unless `ANTHROPIC_API_KEY` is set so `npm test` stays offline. The fixture is shaped so a
   coach following the prompt has to notice three things — a soft-double leak spread one miss each
   across eight cells, over-doubling on hard hands, and a 16 vs 10 losing exactly what perfect play
@@ -161,7 +168,7 @@
   this machine; the app takes the user's own key), so coach output quality remains unverified.
 
 ### Earlier today
-- Renamed the project to **Blackjack Coach** and wrote the README (`d0fec7b`). Directory
+- Renamed the project to **Blackjack Coach** and wrote the README (`aebd06a`). Directory
   `blackjack-trainer` → `blackjack-coach`; `package.json`, `index.html`, the in-app header, and a
   profile-import error string all renamed to match (the stale in-app name was caught by taking
   README screenshots, not by grep). README leads with the verified-chart differentiator and the
@@ -171,7 +178,7 @@
 - Chose the repo name after checking GitHub: `blackjack-trainer`, `blackjack-strategy`, and
   `blackjack` are all taken by active repos with similar scope, so an exact-match name would rank
   below them. Settled on `blackjack-coach`, with AI kept out of the name (see PROJECT.md).
-- Deepened pattern detection (`f1caace`) after comparing the engine against an external
+- Deepened pattern detection (`c29e0de`) after comparing the engine against an external
   114-hand analysis of the user's play. Two structural gaps found: no rule existed for
   *choosing* double wrongly (the "weak dealer means double" overcorrection was invisible), and
   missed-doubles lumped soft and hard together, hiding the common profile of reliable hard
@@ -181,41 +188,41 @@
   visible. Both prompts teach how to read it rather than what to find.
 - Also verified that external analysis against this app's chart: 4 of its cells were S17 answers,
   wrong for H17 (11 vs A, A,7 vs 2, A,8 vs 6, and A,4/A,5 vs 4). Flagged to the user.
-- Live AI coach (`4cb4db3`): reviews the record between hands on a configurable cadence and keeps
+- Live AI coach (`eb927f3`): reviews the record between hands on a configurable cadence and keeps
   a running doing-well / costing-you / try-this list, using structured outputs (json_schema) so the
   list is data. Each run receives its own previous assessment and returns an updated one, so items
   resolve instead of accumulating. In-game alerts are gated by a deliberately high bar in the
   prompt. `shouldRunLive` requires both new hands and new graded decisions so idle rounds can't
   spend a paid call. Verified end-to-end with a mocked API response (16 checks) — request shape,
   alert, list rendering, persistence, and no duplicate call on reload.
-- Optional AI coach (`5853b6c`): Progress-tab panel sends a compact derived-stats digest to
+- Optional AI coach (`d01edc1`): Progress-tab panel sends a compact derived-stats digest to
   `claude-opus-5` via the official SDK (browser-direct, user's own key) and renders a narrative
   read. Refusal fallbacks enabled; typed SDK errors mapped to plain-language messages. API key
   stored under its own global localStorage key so profile exports can never carry it — asserted by
   test. Gated at 20 graded decisions. Browser test confirmed CORS works (a bad key returns a clean
   401 surfaced as a friendly error); the success path needs a real key, so it is user-verified.
-- Table sounds (`c1a939b`): Web Audio oscillator voices (card, chip, correct, miss, level-up), no
+- Table sounds (`756f31a`): Web Audio oscillator voices (card, chip, correct, miss, level-up), no
   asset files, off by default, toggle in Settings. Verified by spying on createOscillator — silent
   by default, audible once enabled. Full E2E regression re-run: 32 checks green.
-- Even money + count speed drill (`e878c1f`): naturals vs a dealer ace now get the real even-money
+- Even money + count speed drill (`0b33ced`): naturals vs a dealer ace now get the real even-money
   offer and its own explanation (payout math was already equivalent to insurance, so this was
   wording + grading only). Speed drill launches from the Keeping the Count skill card — real
   shuffled deck, four tempos, XP scaled by tempo/length, tracks best pace, new Speed Counter badge.
-- Table animations (`30fbb4a`): hole-card 3D flip on reveal (card remounts on reveal so it
+- Table animations (`fb8d3fe`): hole-card 3D flip on reveal (card remounts on reveal so it
   re-fires), result-badge and net-payout pops, all off under prefers-reduced-motion. Verified by
   recording `animationstart` events rather than sampling, since the flip is shorter than a tick.
-- Deviation drills (`c6c2093`): counting-mode drill scenarios that reach a target true count by
+- Deviation drills (`dc0cc2a`): counting-mode drill scenarios that reach a target true count by
   discarding real cards to the tray (shown face-up, countable) instead of faking the count; burns
   aim at the count as it will read at decision time. Each index gets both a live and a just-short
   variant so the drill trains judgment. All P1s now done too.
 - Verified H17 deviation indices against BJA's H17 chart + Wong's Professional Blackjack
-  (`d0bb374`): corrected 12v6 (-4, was -1), 13v3 (-3), 12v4 (-1), 16v9 (+4); added
+  (`600d6a5`): corrected 12v6 (-4, was -1), 13v3 (-3), 12v4 (-1), 16v9 (+4); added
   surrender-aware deviation semantics (stand deviations skipped when surrender available;
   reverse Fab 4 indices for 15v10/15vA in negative shoes); 11vA confirmed basic. All values
   locked by dedicated index tests. Both P0s now done — milestone complete.
-- Profile export/import as JSON (`8136e0b`): per-profile Export download, Import with
+- Profile export/import as JSON (`ae2347b`): per-profile Export download, Import with
   validation, round-trip tested.
-- Mobile QA sweep done (`022268a`): compact header at <=700px, 46px cards, removed the desktop
+- Mobile QA sweep done (`79885b1`): compact header at <=700px, 46px cards, removed the desktop
   min-height dead gap, settings-row wrapping + the `fieldset` min-content overflow fix, and
   auto-scroll of the verdict rail into view on stacked layouts (back to controls after ack).
   Zero horizontal overflow on all six screens at 390px; 144 unit tests + desktop E2E still green.

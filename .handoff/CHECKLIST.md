@@ -12,7 +12,7 @@
 - [x] [45m] Profile export/import (JSON download/upload) so a profile can move between browsers
 - [x] [45m] Hole-card flip animation and win/loss chip payout animation (respecting prefers-reduced-motion)
 
-- [ ] [30m] Add a CI workflow (`.github/workflows/`) running `npm test` + `npm run build` on push and PR — the README now tells contributors that chart and index changes must pass the fixtures, and nothing enforces that on an incoming PR. `.github/` currently holds only `FUNDING.yml`
+- [x] [30m] Add a CI workflow — done 2026-08-12. `.github/workflows/ci.yml` runs `npm test` + `npm run build` on push to `main` and on every PR, matrixed over Node 18 (the README's floor) and 20. No API key is set and the live coach check also needs `COACH_LIVE=1`, so CI cannot bill a call
 - [ ] [5m] Upload `img/header-banner.png` as the social preview in **Settings → General → Social preview** — it's committed for exactly this and now renders in links and search, but it can only be set by hand; the API won't do it
 
 ## P2 — Extras
@@ -25,7 +25,7 @@
 - [x] [1.5h] Count speed-drill mini-game: flash a stream of cards, answer the running count at the end
 - [x] [1h] Sound effects for deal/verdict/level-up with a mute toggle
 - [ ] [4h] Cloud sync for profiles (needs a backend — out of scope for localStorage-only design)
-- [ ] [20m] Decide whether to scrub old `.handoff/.state.json` blobs from git history — untracking only moved the tip, and the old versions carry local `/home/pk` and scratchpad paths plus a shell-command log. Nothing secret, so it was left rather than force-pushing over a published repo. Cheapest to do before anyone forks
+- [x] [20m] Scrub old `.handoff/.state.json` blobs from git history — done 2026-08-12 with `git filter-branch --index-filter --prune-empty`, verified by walking every commit tree on `main`. Rewrote every hash from `022268a` on and dropped one commit that held nothing else; `LOG.md` citations were remapped and all resolve
 - [x] [5m] Flip the repo to public — done 2026-08-12. Re-verified first: 275 tests green, `npm run build` clean, no key-shaped string anywhere in history or in `dist/` (the `sk-ant-` hits are the settings placeholder and an error message). `.handoff/.state.json` was untracked and gitignored on the way out; the four `.handoff/*.md` files stay tracked as the project's engineering log
 - [ ] [20m] Recapture `docs/coach.png` and `docs/skills.png` from a real played-in profile — needs a `Settings → Export` file from the owner's browser; the import-and-capture script is written and tested
 - [ ] [30m] Decide whether `liveCoach` should default to off now that the rail can ask on demand — every ~8 hands it bills a call that the prompt tells it to answer with silence

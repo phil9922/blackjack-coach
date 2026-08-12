@@ -1,0 +1,45 @@
+# The README tells contributors that anything touching the strategy chart, the
+# deviation indices or a counting system's numbers must pass the fixture tests.
+# This is what enforces that on a pull request instead of trusting a reviewer to
+# notice. `npm test` is deliberately offline — no API key, no network, no cost —
+# so it runs on every push including from forks.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 18 is the floor the README states; 20 is what most contributors
+      # will actually have. Both must stay green.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - run: npm ci
+
+      # Offline: no ANTHROPIC_API_KEY is set here, and the live coach check
+      # additionally requires COACH_LIVE=1, so nothing in CI can bill an API call.
+      - name: Test
+        run: npm test
+
+      # Runs `tsc -b` before vite build, so this is the typecheck too.
+      - name: Build
+        run: npm run build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20]

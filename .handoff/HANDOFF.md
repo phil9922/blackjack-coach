@@ -35,22 +35,19 @@ Nothing is outstanding in the code, and the repo is out. Let further work come f
 using the app at a table** — what remains on the checklist is blocked on a book, needs a backend,
 or is small polish, not features the app is missing.
 
-Now that the repo is public, two things change in kind: issues and PRs can arrive from strangers
-(the README's contributing rule is that anything touching the chart, the indices or a system's
-numbers must bring its source and pass the fixtures), and `.handoff/.state.json` is no longer
-tracked — it held local scratchpad paths and a shell-command log. Its *old* versions are still in
-history; nothing secret, just local paths, so it was left rather than rewriting history.
+Now that the repo is public, issues and PRs can arrive from strangers — the README's contributing
+rule is that anything touching the chart, the indices or a system's numbers must bring its source
+and pass the fixtures, and CI now enforces the fixtures part on every PR.
+
+**History was rewritten on 2026-08-12** to scrub `.handoff/.state.json`, so every commit from
+`022268a` onward has a new hash and one commit ("Update handoff state") is gone entirely. Commit
+citations in `LOG.md` were remapped and all resolve. Any clone or checkout predating that push is
+stale and should be re-cloned rather than pulled.
 
 `.env` holds the Claude API key (gitignored, confirmed absent from the bundle). `npm test` is
 offline and free; `npm run test:coach` is the paid live check. Nothing is deployed.
 
 ## Open questions
-- **Nothing enforces the tests on an incoming PR.** `.github/` holds only `FUNDING.yml`, and the
-  README now promises contributors that chart/index changes must pass the fixtures — a promise no
-  automation currently keeps. Worth a CI workflow running `npm test` + `npm run build`?
-- **Old `.state.json` versions are still in history.** Untracking only moved the tip. Contents are
-  local paths and a command log, nothing secret, so history was left alone rather than force-pushing
-  over a published repo. Scrub it, or accept it? Cheapest before anyone forks.
 - **Live coaching bills a call every ~8 hands to usually say nothing.** Its prompt tells the model
   "most updates should return an empty string", so silence is by design — but each silent check is
   paid. Now that the rail has an on-demand ask, is `liveCoach: 'off'` the better default?
