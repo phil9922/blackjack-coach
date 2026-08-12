@@ -1,5 +1,29 @@
 # Log
 
+## 2026-08-08
+- **Double-transcribed KO's betting numbers and locked them** (`b65ef4d`) — new
+  `src/counting/__fixtures__/ko-reference.ts` carries the tags, per-deck IRC, key counts and pivot
+  re-transcribed from published sources without reading `systems.ts`, and
+  `src/counting/ko-reference.test.ts` asserts the two agree (28 tests, suite 247 → 275). The
+  fixture header states that all published KO tables descend from one book (Fuchs & Vancura), so
+  what is independent is the transcription path, not the derivation.
+- **Found and fixed a real gap while doing it** (`b65ef4d`) — the published four-deck key count
+  (-1) was missing from `KO_KEY_COUNTS`, so `koKeyCount(4)` fell through the nearest-listed rule
+  and resolved to the six-deck -4. The app deals six decks so nothing shipped wrong, but the
+  function is exported and would have been wrong the moment deck count became configurable.
+  Regression test pins it. Tags, IRC, the other key counts and the +4 pivot all checked out.
+- **Researched the KO / Hi-Opt I deviation index sets and stopped rather than guess** (`b65ef4d`) —
+  no open-web source clears the project's two-source bar. Hi-Opt I's indices live in Humble &
+  Cooper ch. 8 plus the H17 modifications on p. 263 and in DeepNet's paid database, whose public
+  PDF documents an index set matching our exact rules but prints none of its numbers; the free
+  reproductions contradict each other on 16 v 10 (+2 vs 0, and 0 is simply the Hi-Lo index repeated
+  under a Hi-Opt I heading). KO's set is the KO Preferred matrix, book-only, with reproductions
+  disagreeing on 10,10 v 5 (+10 vs a simulated +7). Findings written to
+  `docs/index-set-sourcing.md`, pointed at from the `supportsDeviations` comment in `systems.ts`.
+- **Noted that KO would need more than data** — its indices are running counts that vary by shoe
+  size, while `findDeviation` takes a true count and `currentTrueCount` deliberately returns 0 for
+  unbalanced systems. Supporting KO means changing the grading path, not adding a table.
+
 ## 2026-08-02
 - **Rewind** (`e2c3e66`) — `Z` or a button in the dock and rail takes back a decision and unwinds
   the whole table: shoe position, running count, hole card, bets, splits. New `REWIND` action and

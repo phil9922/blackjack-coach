@@ -82,9 +82,10 @@ using it at a table.
   check now needs `COACH_LIVE=1` (via `npm run test:coach`) on top of a key. The offline guarantee
   covers the test suite, not just the app.
 - 2026-08-01 — No hosting. The app is built locally (`npm run build` + `npm run preview`) and not
-  deployed anywhere. The repo is private and the app is single-player and client-only, so a public
-  URL would add an attack surface and a maintenance burden for no benefit. Revisit only if the repo
-  goes public.
+  deployed anywhere. The app is single-player and client-only, so a public URL would add an attack
+  surface and a maintenance burden for no benefit. (Revisited 2026-08-12 when the repo went public:
+  still no hosting. `npm run build` emits a static `dist/` that any static host would serve, so this
+  stays a five-minute decision to reverse whenever a live demo is actually wanted.)
 - 2026-08-02 — Casino-branded table themes were built and then removed before publishing. The
   palettes and centre devices were original, but the room names were other companies' trademarks
   shown in Settings and the README, and this repo goes out under the owner's name. Removed the whole
@@ -97,3 +98,10 @@ using it at a table.
 - 2026-08-02 — The dev server port is configuration, not preference. `localStorage` is partitioned
   by origin *including the port*, so a dev server free to wander silently strands saved profiles.
   Pinned to 5175 with `strictPort` so a collision fails loudly instead of relocating the app.
+- 2026-08-08 — A feature that would need unverified numbers doesn't ship, however small the gap
+  looks. KO and Hi-Opt I deviation grading stays off because their index sets exist only in books
+  and the free reproductions disagree with each other — including on cells where one source is
+  plainly just repeating the Hi-Lo index. Shipping a plausible guess and grading players against it
+  is worse than not having the feature, because a wrong index is invisible to the person learning
+  from it. `docs/index-set-sourcing.md` exists so the research isn't repeated and the standard
+  isn't quietly relaxed later.

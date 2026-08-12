@@ -45,7 +45,7 @@ If you're going to memorize something, memorize something that was checked.
 
 **Card counting mode.** Hi-Lo running and true count, count quizzes mid-shoe, count-based bet sizing with the reasoning, and the Illustrious 18 + Fab 4 deviations — 20 indices verified against H17-specific sources, so the "correct" answer shifts with the count exactly as it should.
 
-Three counting systems are selectable: **Hi-Lo**, **KO** (unbalanced — the shoe starts at a negative running count and you never divide by decks remaining), and **Hi-Opt I** (ace-neutral, so it flags that you'd want an ace side count for betting). Only Hi-Lo ships a verified index set, and the app will not pretend otherwise: pick another system and deviation grading switches off, with a note saying why. An index number belongs to the system it was computed for, so grading a KO count against Hi-Lo indices would teach a wrong play — the count, quizzes, speed drill and bet ramp all keep working, only the index plays go away.
+Three counting systems are selectable: **Hi-Lo**, **KO** (unbalanced — the shoe starts at a negative running count and you never divide by decks remaining), and **Hi-Opt I** (ace-neutral, so it flags that you'd want an ace side count for betting). Only Hi-Lo ships a verified index set, and the app will not pretend otherwise: pick another system and deviation grading switches off, with a note saying why. An index number belongs to the system it was computed for, so grading a KO count against Hi-Lo indices would teach a wrong play — the count, quizzes, speed drill and bet ramp all keep working, only the index plays go away. KO's *betting* numbers (tags, IRC, key counts, pivot) are double-transcribed and locked by a fixture like the chart is; [`docs/index-set-sourcing.md`](docs/index-set-sourcing.md) records every source checked for the missing deviation tables and why each one failed the bar.
 
 **Drill mode.** The trainer learns which spots trip you up and deals more of them — weighted by how often and how recently you miss them, so a spot fades from rotation once you fix it. About one hand in four stays fully random so you can't game it. In counting mode it builds specific count scenarios by discarding cards from the real shoe (never by faking a count), including hands that land *just short* of an index, so you have to judge rather than reflex-deviate.
 
@@ -81,6 +81,8 @@ Late surrender is **off by default** (as at most real tables) and can be enabled
 
 ## Getting started
 
+React 18 + TypeScript + Vite, no backend and no server-side anything. You need **Node 18 or newer**; that's the whole toolchain.
+
 ```bash
 npm install
 npm run dev
@@ -91,7 +93,7 @@ Then open **http://localhost:5175**. No backend, no accounts, no build config to
 The port is pinned deliberately, and `strictPort` makes a collision fail loudly instead of moving the app. Progress lives in `localStorage`, which browsers partition by **origin — including the port**, so a dev server that wandered to whatever port was free would silently strand every profile, stat and badge behind an address you'd have no reason to revisit. If you ever do need a different port, your saved progress stays on the old one; **Settings → Export** is the way to carry it across.
 
 ```bash
-npm test              # 247 tests, fully offline — no API calls, no key needed
+npm test              # 275 tests, fully offline — no API calls, no key needed
 npm run build         # typecheck + production build
 npm run test:coach    # optional: checks the AI coach against the real API (costs money)
 ```
@@ -136,6 +138,16 @@ Nothing in the logic layers imports React, so all of it is testable without a DO
 ## Not included
 
 No cloud sync — profiles live in one browser. No real-money anything. No claim that this makes you a winning player: basic strategy makes you a *break-even-ish* player, and counting is hard, slow work that this app can only practice, not perform for you.
+
+---
+
+## Status and contributing
+
+Built for my own practice, published because a checked strategy chart is worth sharing. It's feature-complete for what it set out to do; further work comes from actually using it at a table.
+
+Issues and pull requests are welcome, with one rule that isn't negotiable: **anything touching the strategy chart, the deviation indices, or a counting system's numbers must come with its source and pass the fixture tests.** Those fixtures exist precisely so a plausible-looking change can't quietly teach a wrong play. `npm test` runs fully offline and must stay green.
+
+`npm run build` emits a static `dist/` — client-only, so it hosts on anything that serves files.
 
 ---
 

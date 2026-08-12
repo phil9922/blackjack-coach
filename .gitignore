@@ -5,6 +5,10 @@ dist
 *.tsbuildinfo
 .claude-swarm-feed.log
 
+# Session tooling state — local scratchpad paths and command history, not project docs.
+# The .handoff/*.md files are tracked; this one is machine exhaust.
+.handoff/.state.json
+
 # Never commit credentials. The AI coach uses the user's own Claude API key,
 # supplied at runtime — nothing here should ever hold one.
 .env
