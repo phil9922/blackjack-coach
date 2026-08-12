@@ -1,5 +1,31 @@
 # Log
 
+## 2026-08-12
+- **The repo is public** — `github.com/phil9922/blackjack-coach`, verified with an unauthenticated
+  API fetch rather than trusting the flag (`gh repo edit --visibility public`; this `gh` build has
+  no `--accept-visibility-change-consequences` flag, so the plain form is correct). Re-verified
+  before flipping instead of relying on the earlier check: 275 tests green, `npm run build` clean,
+  and no key-shaped string (`sk-ant-[A-Za-z0-9_-]{20,}`) anywhere in full history or in `dist/`.
+  The `sk-ant-` hits that do exist are the Settings input placeholder and a rejected-key error
+  message — source, not secrets.
+- **Untracked `.handoff/.state.json`** (`59ec206`) — 29KB of tooling exhaust carrying ~40
+  `/tmp/claude-1000/…` scratchpad paths, 18 `/home/pk` paths and a log of shell commands. Now
+  gitignored in `.gitignore` rather than only `.git/info/exclude`, which isn't shared. The four
+  `.handoff/*.md` files stay tracked deliberately — they read as an engineering log. Old versions
+  of `.state.json` remain in history; nothing secret in them, so history was left unrewritten
+  rather than force-pushing over a published repo.
+- **Docs readied for strangers** (`59ec206`) — README now links `docs/index-set-sourcing.md` from
+  the counting-systems paragraph so "only Hi-Lo grades deviations" carries its receipts, names the
+  stack and the Node floor, corrects 247 → 275 tests, and adds a Status and contributing section
+  whose one hard rule is that any change to the chart, the indices or a system's numbers arrives
+  with a source and passes the fixtures. Every numeric claim in the README was re-checked against
+  the source first — 20 deviations, 7 skills, 17 achievements, 11 coach rules, 36 hand-written
+  explanations, 4 AI personas, max 4 seats — and all of them held.
+- **Revisited the no-hosting decision** (`59ec206`) — it was explicitly conditioned on "revisit if
+  the repo goes public", and that trigger just fired. Still no hosting, now recorded as a live
+  choice rather than a consequence of privacy: `npm run build` emits a static `dist/`, so it is a
+  five-minute reversal whenever a demo is actually wanted.
+
 ## 2026-08-08
 - **Double-transcribed KO's betting numbers and locked them** (`b65ef4d`) — new
   `src/counting/__fixtures__/ko-reference.ts` carries the tags, per-deck IRC, key counts and pivot
