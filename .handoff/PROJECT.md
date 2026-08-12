@@ -105,3 +105,9 @@ using it at a table.
   is worse than not having the feature, because a wrong index is invisible to the person learning
   from it. `docs/index-set-sourcing.md` exists so the research isn't repeated and the standard
   isn't quietly relaxed later.
+- 2026-08-12 — The repo is public, and the `.handoff/*.md` files go public with it. They read as an
+  engineering log — why the chart is double-transcribed, why two counting systems ship with grading
+  off — which is the most credible thing this repo has to say about itself. What does *not* go
+  public is `.handoff/.state.json`: machine exhaust holding local paths and a shell-command log,
+  now gitignored and scrubbed from history. The split is the rule going forward — prose about the
+  work is public, tooling state is not.

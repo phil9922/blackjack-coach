@@ -45,6 +45,12 @@ history; nothing secret, just local paths, so it was left rather than rewriting 
 offline and free; `npm run test:coach` is the paid live check. Nothing is deployed.
 
 ## Open questions
+- **Nothing enforces the tests on an incoming PR.** `.github/` holds only `FUNDING.yml`, and the
+  README now promises contributors that chart/index changes must pass the fixtures — a promise no
+  automation currently keeps. Worth a CI workflow running `npm test` + `npm run build`?
+- **Old `.state.json` versions are still in history.** Untracking only moved the tip. Contents are
+  local paths and a command log, nothing secret, so history was left alone rather than force-pushing
+  over a published repo. Scrub it, or accept it? Cheapest before anyone forks.
 - **Live coaching bills a call every ~8 hands to usually say nothing.** Its prompt tells the model
   "most updates should return an empty string", so silence is by design — but each silent check is
   paid. Now that the rail has an on-demand ask, is `liveCoach: 'off'` the better default?
@@ -58,4 +64,6 @@ offline and free; `npm run test:coach` is the paid live check. Nothing is deploy
 - The sticky dock can occlude the bottom of the felt when content overflows a short window. Content
   is still reachable by scrolling. Worth adding bottom padding so seats always clear it?
 - `img/header-banner.png` is committed but unreferenced — kept as a raster for a GitHub social
-  preview card, which requires PNG at 2:1.
+  preview card, which requires PNG at 2:1. Now that the repo is public that card actually renders
+  in links and search, but it has to be uploaded by hand in **Settings → General → Social preview**;
+  the API won't set it.

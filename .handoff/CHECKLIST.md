@@ -12,6 +12,9 @@
 - [x] [45m] Profile export/import (JSON download/upload) so a profile can move between browsers
 - [x] [45m] Hole-card flip animation and win/loss chip payout animation (respecting prefers-reduced-motion)
 
+- [ ] [30m] Add a CI workflow (`.github/workflows/`) running `npm test` + `npm run build` on push and PR — the README now tells contributors that chart and index changes must pass the fixtures, and nothing enforces that on an incoming PR. `.github/` currently holds only `FUNDING.yml`
+- [ ] [5m] Upload `img/header-banner.png` as the social preview in **Settings → General → Social preview** — it's committed for exactly this and now renders in links and search, but it can only be set by hand; the API won't do it
+
 ## P2 — Extras
 - [x] [2h] Double-transcribe the KO key count / pivot in `src/counting/systems.ts` against an independent second source and add fixture coverage — done: `src/counting/__fixtures__/ko-reference.ts` + `ko-reference.test.ts`, 28 tests. Found and fixed a real gap: the published 4-deck key count (-1) was missing from the table, so `koKeyCount(4)` resolved to the six-deck -4. Tags, IRC, key counts and pivot otherwise all checked out
 - [ ] [3h, BLOCKED on a source] Ship verified Hi-Opt I deviation index sets so index plays grade there too — needs Humble & Cooper ch. 8 plus the H17 modifications on p. 263 as text or a legible photo. Researched 2026-08-08: no open-web source clears the two-source bar and the free reproductions contradict each other on 16 v 10. Don't re-research it; `docs/index-set-sourcing.md` records what was checked and why each fails. With the tables in hand it is a fixture, a test and one flag
@@ -22,6 +25,7 @@
 - [x] [1.5h] Count speed-drill mini-game: flash a stream of cards, answer the running count at the end
 - [x] [1h] Sound effects for deal/verdict/level-up with a mute toggle
 - [ ] [4h] Cloud sync for profiles (needs a backend — out of scope for localStorage-only design)
+- [ ] [20m] Decide whether to scrub old `.handoff/.state.json` blobs from git history — untracking only moved the tip, and the old versions carry local `/home/pk` and scratchpad paths plus a shell-command log. Nothing secret, so it was left rather than force-pushing over a published repo. Cheapest to do before anyone forks
 - [x] [5m] Flip the repo to public — done 2026-08-12. Re-verified first: 275 tests green, `npm run build` clean, no key-shaped string anywhere in history or in `dist/` (the `sk-ant-` hits are the settings placeholder and an error message). `.handoff/.state.json` was untracked and gitignored on the way out; the four `.handoff/*.md` files stay tracked as the project's engineering log
 - [ ] [20m] Recapture `docs/coach.png` and `docs/skills.png` from a real played-in profile — needs a `Settings → Export` file from the owner's browser; the import-and-capture script is written and tested
 - [ ] [30m] Decide whether `liveCoach` should default to off now that the rail can ask on demand — every ~8 hands it bills a call that the prompt tells it to answer with silence
