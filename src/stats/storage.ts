@@ -1,5 +1,6 @@
 import type { StatsState } from './model'
 import { emptyStats } from './model'
+import { DEFAULT_RULES, type TableRules } from '../engine/rules'
 
 /**
  * All persistence is scoped to a user profile. A small registry tracks the
@@ -88,6 +89,22 @@ export function createProfile(name: string): Profile {
   const reg = loadRegistry()
   const profile = newProfile(name.trim() || `Player ${reg.profiles.length + 1}`)
   saveRegistry({ activeId: profile.id, profiles: [...reg.profiles, profile] })
+  return profile
+}
+
+/**
+ * Creates a profile with its own table rules (shoe size, table min/max)
+ * chosen up front, rather than inheriting DEFAULT_RULES silently. Must run
+ * before anything else touches the new profile's settings key, since
+ * savePersisted here writes into whichever profile createProfile just made
+ * active.
+ */
+export function createProfileWithRules(
+  name: string,
+  overrides: Pick<TableRules, 'tableMin' | 'tableMax' | 'decks'>
+): Profile {
+  const profile = createProfile(name)
+  savePersisted({ rules: { ...DEFAULT_RULES, ...overrides } })
   return profile
 }
 

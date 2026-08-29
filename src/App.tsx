@@ -6,12 +6,13 @@ import { StatsScreen } from './components/StatsScreen'
 import { ProgressScreen } from './components/ProgressScreen'
 import { SkillsScreen } from './components/SkillsScreen'
 import { SettingsScreen } from './components/SettingsScreen'
+import { NewProfileModal } from './components/NewProfileModal'
 import type { TrainingMode } from './engine/types'
 import {
   savePersisted,
   getProfiles,
   getActiveProfile,
-  createProfile,
+  createProfileWithRules,
   switchProfile,
 } from './stats/storage'
 import { countSystemOf } from './engine/game'
@@ -35,16 +36,15 @@ export default function App() {
   const coach = useAiCoach(state, stats)
   const [profiles] = useState(getProfiles)
   const [activeProfile] = useState(getActiveProfile)
+  const [showNewProfile, setShowNewProfile] = useState(false)
 
   const onProfileChange = (value: string) => {
     if (value === '__new') {
-      const name = window.prompt('Name for the new profile?')
-      if (name === null) return
-      createProfile(name)
-    } else {
-      if (value === activeProfile.id) return
-      switchProfile(value)
+      setShowNewProfile(true)
+      return
     }
+    if (value === activeProfile.id) return
+    switchProfile(value)
     // A full reload re-initializes every subsystem from the new profile's data.
     window.location.reload()
   }
@@ -162,6 +162,17 @@ export default function App() {
           <SettingsScreen state={state} dispatch={dispatch} stats={stats.stats} />
         )}
       </main>
+
+      {showNewProfile && (
+        <NewProfileModal
+          onClose={() => setShowNewProfile(false)}
+          onCreate={({ name, tableMin, tableMax, decks }) => {
+            createProfileWithRules(name, { tableMin, tableMax, decks })
+            // A full reload re-initializes every subsystem from the new profile's data.
+            window.location.reload()
+          }}
+        />
+      )}
     </div>
   )
 }

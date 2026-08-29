@@ -14,7 +14,7 @@ import {
   savePersisted,
   getProfiles,
   getActiveProfile,
-  createProfile,
+  createProfileWithRules,
   switchProfile,
   renameProfile,
   deleteProfile,
@@ -23,6 +23,7 @@ import {
   loadApiKey,
   saveApiKey,
 } from '../stats/storage'
+import { NewProfileModal } from './NewProfileModal'
 
 function download(filename: string, body: string, type: string) {
   const blob = new Blob([body], { type })
@@ -62,6 +63,7 @@ export function SettingsScreen({
   const [saved, setSaved] = useState(false)
   const [apiKey, setApiKey] = useState(loadApiKey)
   const [keySaved, setKeySaved] = useState(false)
+  const [showNewProfile, setShowNewProfile] = useState(false)
 
   const apply = () => {
     dispatch({ type: 'UPDATE_RULES', rules })
@@ -127,8 +129,9 @@ export function SettingsScreen({
           </span>
         </label>
         <p className="settings__fixed">
-          Fixed: 6 decks · dealer hits soft 17 · double after split · blackjack pays 3:2 · resplit to
-          4 hands · dealer peeks
+          Shoe: {rules.decks} {rules.decks === 1 ? 'deck' : 'decks'} <em>(set when this profile was
+          created)</em> · Fixed: dealer hits soft 17 · double after split · blackjack pays 3:2 ·
+          resplit to 4 hands · dealer peeks
         </p>
       </fieldset>
 
@@ -416,16 +419,7 @@ export function SettingsScreen({
           )
         })}
         <div className="settings__row">
-          <button
-            className="btn btn--ghost"
-            onClick={() => {
-              const name = window.prompt('Name for the new profile?')
-              if (name !== null) {
-                createProfile(name)
-                window.location.reload()
-              }
-            }}
-          >
+          <button className="btn btn--ghost" onClick={() => setShowNewProfile(true)}>
             + New profile
           </button>
           <label className="btn btn--ghost import-label">
@@ -466,6 +460,16 @@ export function SettingsScreen({
           {saved ? 'Saved — applies next hand.' : 'Applies everything on this page.'}
         </span>
       </div>
+
+      {showNewProfile && (
+        <NewProfileModal
+          onClose={() => setShowNewProfile(false)}
+          onCreate={({ name, tableMin, tableMax, decks }) => {
+            createProfileWithRules(name, { tableMin, tableMax, decks })
+            window.location.reload()
+          }}
+        />
+      )}
     </div>
   )
 }

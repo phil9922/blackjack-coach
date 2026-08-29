@@ -3,6 +3,7 @@ import {
   getProfiles,
   getActiveProfile,
   createProfile,
+  createProfileWithRules,
   switchProfile,
   renameProfile,
   deleteProfile,
@@ -14,6 +15,7 @@ import {
   savePersisted,
 } from './storage'
 import { emptyStats } from './model'
+import { DEFAULT_RULES, type TableRules } from '../engine/rules'
 
 // Minimal localStorage for the node test environment.
 function installFakeStorage() {
@@ -77,6 +79,15 @@ describe('profile registry', () => {
     const loaded = loadPersisted<{ buyIn: number; bankroll?: number }>({ buyIn: 500 })
     expect(loaded.buyIn).toBe(900)
     expect(loaded.bankroll).toBe(640)
+  })
+
+  it('creates a profile with chosen table rules, not the defaults', () => {
+    const second = createProfileWithRules('High roller', { tableMin: 100, tableMax: 5000, decks: 2 })
+    expect(getActiveProfile().id).toBe(second.id)
+    const loaded = loadPersisted<{ rules: TableRules }>({ rules: DEFAULT_RULES })
+    expect(loaded.rules).toMatchObject({ tableMin: 100, tableMax: 5000, decks: 2 })
+    // Untouched fields still come from DEFAULT_RULES.
+    expect(loaded.rules.hitSoft17).toBe(DEFAULT_RULES.hitSoft17)
   })
 
   it('rename keeps id and data', () => {
