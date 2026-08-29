@@ -6,6 +6,8 @@
 
 Plays like a real casino table — six decks, dealer hits soft 17, other players at the table, chips and a bankroll. But every move you make is graded against basic strategy in real time, with the reasoning, and the app builds a picture of how you play so it can tell you what to fix.
 
+**[→ Try a hosted version at countthebook.com](https://countthebook.com)** — or self-host this repo with your own Claude API key (see below).
+
 ![The table, with a graded decision and its explanation](docs/table.png)
 
 ---

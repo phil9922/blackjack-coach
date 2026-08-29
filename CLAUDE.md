@@ -14,7 +14,14 @@ flag or an "optional" toggle:
 - Sign-in / sign-up / account management of any kind
 - Billing, subscriptions, Stripe, or any payment integration
 - A server/worker backend that holds an API key on the player's behalf
-- Any reference to the private repo's name, domain, or implementation details
+- Any reference to the private repo's *name* or *implementation details* (its
+  code, its stack, how the subscription works, anything from its CLAUDE.md)
+
+The one deliberate exception: the README may link to the hosted product's
+**domain** as a "try it live" / "prefer not to self-host?" pointer — ordinary
+practice for a self-hostable OSS project with a paid hosted option. That's a
+single outbound link, not a reference to the private repo itself; it carries
+no other detail about how the hosted version is built.
 
 **The AI coach in this repo must always require the player's own Claude API key**,
 entered in Settings and sent directly from their browser to Anthropic — never a
