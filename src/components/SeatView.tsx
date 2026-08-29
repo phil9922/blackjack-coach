@@ -6,10 +6,15 @@ export function SeatView({
   seat,
   isActive,
   activeHandIndex,
+  seatIndex,
+  totalSeats,
 }: {
   seat: Seat
   isActive: boolean
   activeHandIndex: number
+  /** this seat's position in the real deal order (see dealStagger) */
+  seatIndex: number
+  totalSeats: number
 }) {
   const profile = seat.profileId ? AI_PROFILES[seat.profileId] : null
   return (
@@ -34,6 +39,8 @@ export function SeatView({
               // Fade the hands that are waiting their turn, so the one being
               // played is unmistakable. Only while this seat is actually acting.
               dimmed={isActive && !handActive}
+              seatIndex={seatIndex}
+              totalSeats={totalSeats}
             />
           )
         })}

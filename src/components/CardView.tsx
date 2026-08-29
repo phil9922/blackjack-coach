@@ -11,7 +11,11 @@ const DEAL_MS = 320
  * card does. Falls back to the plain CSS deal-in (see .card's own
  * `animation`) when there's no shoe to measure from, e.g. inside a modal.
  */
-function useDealFromShoe(cardRef: React.RefObject<HTMLDivElement>, skip: boolean) {
+function useDealFromShoe(
+  cardRef: React.RefObject<HTMLDivElement>,
+  skip: boolean,
+  delayMs: number
+) {
   const shoeSlotRef = useContext(ShoeAnchorContext)
 
   useLayoutEffect(() => {
@@ -34,7 +38,10 @@ function useDealFromShoe(cardRef: React.RefObject<HTMLDivElement>, skip: boolean
     // before we switch on the transition below — otherwise both would land
     // in the same frame and nothing would visibly animate.
     void el.offsetWidth
-    el.style.transition = `transform ${DEAL_MS}ms cubic-bezier(0.16, 0.85, 0.24, 1), opacity ${Math.round(DEAL_MS * 0.7)}ms ease-out`
+    // delayMs holds the card at the shoe — invisible, not yet in transit —
+    // until its turn in the deal, so a full round deals card by card instead
+    // of every seat's cards arriving in one simultaneous burst.
+    el.style.transition = `transform ${DEAL_MS}ms cubic-bezier(0.16, 0.85, 0.24, 1) ${delayMs}ms, opacity ${Math.round(DEAL_MS * 0.7)}ms ease-out ${delayMs}ms`
     el.style.transform = 'translate(0, 0) scale(1)'
     el.style.opacity = '1'
 
@@ -44,7 +51,7 @@ function useDealFromShoe(cardRef: React.RefObject<HTMLDivElement>, skip: boolean
       el.style.opacity = ''
       el.style.animation = ''
     }
-    const t = setTimeout(reset, DEAL_MS + 30)
+    const t = setTimeout(reset, delayMs + DEAL_MS + 30)
     return () => {
       clearTimeout(t)
       // Undo any in-progress slide immediately. Strict Mode double-invokes
@@ -63,15 +70,18 @@ export function CardView({
   card,
   hidden,
   flipIn,
+  dealDelayMs = 0,
 }: {
   card: Card
   hidden?: boolean
   /** play the turn-over animation instead of the deal-in drop */
   flipIn?: boolean
+  /** how long this card waits at the shoe before sliding — staggers a round of dealing */
+  dealDelayMs?: number
 }) {
   const ref = useRef<HTMLDivElement>(null)
   // The hole-card reveal is a flip in place, not a new deal — never slide it.
-  useDealFromShoe(ref, !!flipIn)
+  useDealFromShoe(ref, !!flipIn, dealDelayMs)
 
   if (hidden) {
     return <div ref={ref} className="card card--back" aria-label="face-down card" />

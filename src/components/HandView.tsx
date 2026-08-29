@@ -1,6 +1,7 @@
 import type { PlayerHand } from '../engine/types'
 import { evaluateHand, isBlackjack, isBusted } from '../engine/hand'
 import { CardView } from './CardView'
+import { seatDealDelayMs } from './dealStagger'
 
 const RESULT_LABELS: Record<string, string> = {
   blackjack: 'Blackjack!',
@@ -17,6 +18,8 @@ export function HandView({
   index = 0,
   count = 1,
   dimmed = false,
+  seatIndex = 0,
+  totalSeats = 1,
 }: {
   hand: PlayerHand
   active: boolean
@@ -26,6 +29,9 @@ export function HandView({
   count?: number
   /** another hand at this seat is the one in play */
   dimmed?: boolean
+  /** this seat's position in the real deal order (see dealStagger) */
+  seatIndex?: number
+  totalSeats?: number
 }) {
   const { total, soft } = evaluateHand(hand.cards)
   const bj = isBlackjack(hand.cards, hand.isSplitHand)
@@ -51,7 +57,14 @@ export function HandView({
       )}
       <div className="hand__cards">
         {hand.cards.map((c, i) => (
-          <CardView key={i} card={c} />
+          <CardView
+            key={i}
+            card={c}
+            // A split hand's cards aren't part of the synchronized initial
+            // deal (one came from the pair, one's a live post-split draw),
+            // so they deal in immediately rather than queuing behind it.
+            dealDelayMs={hand.isSplitHand ? 0 : seatDealDelayMs(i, seatIndex, totalSeats)}
+          />
         ))}
       </div>
       <div className="hand__meta">

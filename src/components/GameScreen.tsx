@@ -16,6 +16,7 @@ import { RewindButton } from './RewindButton'
 import { TableLayout } from './TableLayout'
 import { ShoeView, ShoeAnchorContext } from './ShoeView'
 import { CountChip } from './CountChip'
+import { dealerDealDelayMs } from './dealStagger'
 import { suggestBet } from '../betting/advisor'
 import { BetControls } from './BetControls'
 import { FeedbackPanel, type GamifyNotice, type VerdictEntry } from './FeedbackPanel'
@@ -275,6 +276,7 @@ export function GameScreen({
                   card={c}
                   hidden={faceDown}
                   flipIn={isHole && state.holeRevealed}
+                  dealDelayMs={dealerDealDelayMs(i, state.seats.length)}
                 />
               )
             })}
@@ -322,6 +324,8 @@ export function GameScreen({
               seat={seat}
               isActive={state.phase === 'seatTurn' && state.activeSeatIndex === i}
               activeHandIndex={state.activeHandIndex}
+              seatIndex={i}
+              totalSeats={state.seats.length}
             />
           ))}
         </section>
