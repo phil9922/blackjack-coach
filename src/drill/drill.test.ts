@@ -69,7 +69,7 @@ describe('drill-mode dealing', () => {
 
   it('stacks the user hand and dealer upcard to the picked spot', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings, buyIn: 1000, seed: 42 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: plan })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: plan })
     const cards = userSeat(s).hands[0].cards
     const ranks = cards.map((c) => normalizeRank(c.rank)).sort()
     expect(ranks).toEqual(['10', '6'].sort())
@@ -79,7 +79,7 @@ describe('drill-mode dealing', () => {
 
   it('keeps the shoe an honest 312-card multiset after stacking', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings, buyIn: 1000, seed: 42 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: plan })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: plan })
     expect(s.shoe).toHaveLength(312)
     const byRank = new Map<string, number>()
     for (const c of s.shoe) byRank.set(c.rank, (byRank.get(c.rank) ?? 0) + 1)
@@ -88,12 +88,12 @@ describe('drill-mode dealing', () => {
 
   it('grades on drilled hands carry the drilled flag', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings, buyIn: 1000, seed: 42 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: plan })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: plan })
     // dealer shows 10: peek may end the round on a dealer blackjack — re-deal until playable
     let guard = 0
     while (s.phase !== 'seatTurn' && guard++ < 10) {
       if (s.phase === 'roundOver') s = gameReducer(s, { type: 'NEXT_ROUND' })
-      if (s.phase === 'betting') s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: plan })
+      if (s.phase === 'betting') s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: plan })
     }
     expect(s.phase).toBe('seatTurn')
     s = gameReducer(s, { type: 'PLAYER_ACTION', action: 'hit' })
@@ -102,7 +102,7 @@ describe('drill-mode dealing', () => {
 
   it('does not stack when drill mode is off, even if a plan is passed', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings: DEFAULT_SETTINGS, buyIn: 1000, seed: 123 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: plan })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: plan })
     expect(s.drilledLabel).toBe(null)
   })
 })
@@ -133,7 +133,7 @@ describe('deviation drills (counting mode)', () => {
 
   it('burns the shoe to put the decision at the target count', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings: countingSettings, buyIn: 1000, seed: 11 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: devPlan(2) })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: devPlan(2) })
     expect(s.burnedCards.length).toBeGreaterThan(0)
     expect(currentTrueCount(s)).toBe(2)
     expect(s.phase).toBe('seatTurn')
@@ -141,7 +141,7 @@ describe('deviation drills (counting mode)', () => {
 
   it('keeps the shoe and count honest while burning', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings: countingSettings, buyIn: 1000, seed: 11 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: devPlan(3) })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: devPlan(3) })
     // shoe is still a full 6-deck multiset — cards moved, none invented
     expect(s.shoe).toHaveLength(312)
     const byRank = new Map<string, number>()
@@ -157,14 +157,14 @@ describe('deviation drills (counting mode)', () => {
 
   it('a live-index drill grades the deviation as correct', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings: countingSettings, buyIn: 1000, seed: 11 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: devPlan(2) })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: devPlan(2) })
     s = gameReducer(s, { type: 'PLAYER_ACTION', action: 'stand' }) // 12 v 3 stands at TC >= 2
     expect(s.lastGrade).toMatchObject({ wasCorrect: true, category: 'deviation' })
   })
 
   it('a just-short drill wants basic strategy, not the deviation', () => {
     let s = initGame({ rules: DEFAULT_RULES, settings: countingSettings, buyIn: 1000, seed: 11 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: devPlan(1) })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: devPlan(1) })
     expect(currentTrueCount(s)).toBe(1)
     s = gameReducer(s, { type: 'PLAYER_ACTION', action: 'stand' })
     expect(s.lastGrade).toMatchObject({ wasCorrect: false, correct: 'hit' })
@@ -175,7 +175,7 @@ describe('deviation drills (counting mode)', () => {
       spots: [{ label: 'hard 16 vs 10', playerRanks: ['10', '6'], dealerUp: '10', weight: 1 }],
     }
     let s = initGame({ rules: DEFAULT_RULES, settings: countingSettings, buyIn: 1000, seed: 11 })
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15, drill: basicPlan })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25, drill: basicPlan })
     expect(s.burnedCards).toHaveLength(0)
   })
 })

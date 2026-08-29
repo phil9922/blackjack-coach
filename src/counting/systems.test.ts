@@ -212,7 +212,7 @@ describe('the shoe stays honest under every system', () => {
       })
 
       for (let round = 0; round < 12; round++) {
-        state = gameReducer(state, { type: 'PLACE_BET_AND_DEAL', amount: 15 })
+        state = gameReducer(state, { type: 'PLACE_BET_AND_DEAL', amount: 25 })
         expect(state.runningCount).toBe(faceUpTotal(state))
 
         // Play the round out, standing on everything, then settle.
@@ -255,7 +255,7 @@ describe('switching system mid-shoe', () => {
   it('takes a fresh shoe so the count is never a mix of two tag sets', () => {
     // Play a few hands so the Hi-Lo count is somewhere other than zero.
     let s = withSystem('hilo')
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15 })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25 })
     for (let i = 0; i < 40 && s.phase !== 'roundOver'; i++) {
       if (s.phase === 'insurance') s = gameReducer(s, { type: 'INSURANCE', take: false })
       else if (s.phase === 'seatTurn' && activeSeat(s)?.kind === 'user') {
@@ -283,7 +283,7 @@ describe('switching system mid-shoe', () => {
 
   it('leaves the shoe alone when other settings change', () => {
     let s = withSystem('hilo')
-    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 15 })
+    s = gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount: 25 })
     for (let i = 0; i < 40 && s.phase !== 'roundOver'; i++) {
       if (s.phase === 'insurance') s = gameReducer(s, { type: 'INSURANCE', take: false })
       else if (s.phase === 'seatTurn' && activeSeat(s)?.kind === 'user') {

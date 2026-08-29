@@ -59,7 +59,7 @@ function stacked(opts: {
   }
 }
 
-const deal = (s: GameState, amount = 15) =>
+const deal = (s: GameState, amount = 25) =>
   gameReducer(s, { type: 'PLACE_BET_AND_DEAL', amount })
 const act = (s: GameState, action: 'hit' | 'stand' | 'double' | 'split' | 'surrender') =>
   gameReducer(s, { type: 'PLAYER_ACTION', action })
@@ -85,7 +85,7 @@ describe('full round flow', () => {
   it('a mistake is graded but the chosen move still plays out', () => {
     // 16 vs 7: book says hit; user stands anyway and gets away with it (dealer 17 < ... no, 17 beats 16)
     let s = stacked({ user: ['10', '6'], up: '7', hole: '10' })
-    s = deal(s, 20)
+    s = deal(s, 25)
     s = act(s, 'stand')
     expect(s.lastGrade?.wasCorrect).toBe(false)
     expect(s.lastGrade?.correct).toBe('hit')
@@ -93,7 +93,7 @@ describe('full round flow', () => {
     s = gameReducer(s, { type: 'ACKNOWLEDGE' })
     s = tickUntil(s, 'roundOver')
     expect(s.roundResults?.[0].result).toBe('lose')
-    expect(s.userBankroll).toBe(980)
+    expect(s.userBankroll).toBe(975)
   })
 
   it('blackjack pays 3:2 without a dealer draw-out', () => {
@@ -121,7 +121,7 @@ describe('full round flow', () => {
 
   it('bet outside table limits is rejected', () => {
     const s = stacked({ user: ['10', '10'], up: '9', hole: '10' })
-    expect(deal(s, 10).phase).toBe('betting') // below $15 min
+    expect(deal(s, 10).phase).toBe('betting') // below $25 min
     expect(deal(s, 2000).phase).toBe('betting') // above $1000 max
     expect(deal(s, 5000).phase).toBe('betting') // above bankroll
   })
@@ -167,7 +167,7 @@ describe('splits', () => {
 describe('insurance and peek', () => {
   it('dealer ace offers insurance; declining is graded correct in basic mode', () => {
     let s = stacked({ user: ['10', '9'], up: 'A', hole: '9' })
-    s = deal(s, 20)
+    s = deal(s, 25)
     expect(s.phase).toBe('insurance')
     s = gameReducer(s, { type: 'INSURANCE', take: false })
     expect(s.lastGrade?.category).toBe('insurance')
@@ -177,20 +177,20 @@ describe('insurance and peek', () => {
 
   it('dealer blackjack ends the round immediately; insurance pays 2:1', () => {
     let s = stacked({ user: ['10', '9'], up: 'A', hole: 'K' })
-    s = deal(s, 20)
-    s = gameReducer(s, { type: 'INSURANCE', take: true }) // insurance = 10
+    s = deal(s, 25)
+    s = gameReducer(s, { type: 'INSURANCE', take: true }) // insurance = 12.5
     expect(s.phase).toBe('roundOver')
-    // hand loses 20, insurance wins 20 -> net 0
+    // hand loses 25, insurance wins 25 -> net 0
     expect(s.userBankroll).toBe(1000)
-    expect(s.insuranceNet).toBe(20)
+    expect(s.insuranceNet).toBe(25)
     expect(s.roundResults?.[0].result).toBe('lose')
   })
 
   it('ten-up peek short-circuits into settlement on dealer blackjack', () => {
     let s = stacked({ user: ['10', '9'], up: 'K', hole: 'A' })
-    s = deal(s, 20)
+    s = deal(s, 25)
     expect(s.phase).toBe('roundOver')
-    expect(s.userBankroll).toBe(980)
+    expect(s.userBankroll).toBe(975)
   })
 
   it('even money: taking it locks in exactly +1 bet either way', () => {
@@ -231,7 +231,7 @@ describe('insurance and peek', () => {
 
   it('player blackjack pushes a dealer blackjack', () => {
     let s = stacked({ user: ['A', 'Q'], up: 'K', hole: 'A' })
-    s = deal(s, 20)
+    s = deal(s, 25)
     expect(s.phase).toBe('roundOver')
     expect(s.userBankroll).toBe(1000)
     expect(s.roundResults?.[0].result).toBe('push')
@@ -263,7 +263,7 @@ describe('counting and the shoe', () => {
   it('tracks visible cards only, revealing the hole at dealer turn', () => {
     // user 10 (-1) + 6 (+1), up 9 (0) = 0; hole 5 hidden and NOT counted
     let s = stacked({ user: ['10', '6'], up: '9', hole: '5', extra: ['4'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     expect(s.runningCount).toBe(0)
     s = act(s, 'hit') // draws 4 (+1) -> 20
     expect(s.runningCount).toBe(1)
@@ -276,13 +276,13 @@ describe('counting and the shoe', () => {
   it('passing the cut card schedules a shuffle that resets the count', () => {
     let s = stacked({ user: ['10', '10'], up: '9', hole: '10' })
     s = { ...s, cutIndex: 1 } // cut card passes during this deal
-    s = deal(s, 15)
+    s = deal(s, 25)
     s = act(s, 'stand')
     s = tickUntil(s, 'roundOver')
     expect(s.pendingShuffle).toBe(true)
     expect(s.runningCount).not.toBe(0)
     s = gameReducer(s, { type: 'NEXT_ROUND' })
-    s = deal(s, 15)
+    s = deal(s, 25)
     expect(s.justShuffled).toBe(true)
     // fresh shoe: only the fresh deal's cards are counted
     expect(s.nextCard).toBe(4)
@@ -298,7 +298,7 @@ describe('AI seats', () => {
       hole: '9',
       extra: ['9', '10'], // AI hits 11 -> 20 (stands); dealer has 17
     })
-    s = deal(s, 15)
+    s = deal(s, 25)
     expect(s.phase).toBe('seatTurn')
     expect(activeSeat(s)?.kind).toBe('ai')
     s = tickUntil(s, 'seatTurn', 1) // no-op helper; step AI explicitly:
@@ -321,7 +321,7 @@ describe('rewind', () => {
   it('restores the hand, the shoe position and the count exactly', () => {
     // user 10 (-1) + 6 (+1), up 9 (0) = 0; hole 5 hidden
     let s = stacked({ user: ['10', '6'], up: '9', hole: '5', extra: ['4'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     const before = s
     s = act(s, 'hit') // draws the 4 (+1)
     expect(userSeat(s).hands[0].cards).toHaveLength(3)
@@ -340,7 +340,7 @@ describe('rewind', () => {
 
   it('a rewound bust puts you back at the decision', () => {
     let s = stacked({ user: ['10', '6'], up: '10', hole: '8', extra: ['10'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     s = act(s, 'hit') // 26 — bust, turn is handed away
     expect(s.phase).not.toBe('seatTurn')
 
@@ -354,7 +354,7 @@ describe('rewind', () => {
   it('keeps the grade on the record and marks the replay so it is not counted twice', () => {
     // 16 vs 10 hits to 19, so the replay leaves a live hand to keep deciding on
     let s = stacked({ user: ['10', '6'], up: '10', hole: '8', extra: ['3', '5'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     s = act(s, 'stand') // 16 vs 10 — book says hit, so this is a miss
     const missSeq = s.gradeSeq
     expect(s.lastGrade?.wasCorrect).toBe(false)
@@ -378,7 +378,7 @@ describe('rewind', () => {
 
   it('two rewinds owe two replays', () => {
     let s = stacked({ user: ['5', '2'], up: '6', hole: '8', extra: ['3', '4', '2', '2'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     s = act(s, 'hit')
     s = act(s, 'hit')
     s = rewind(s)
@@ -410,12 +410,12 @@ describe('rewind', () => {
 
   it('a new hand clears the history', () => {
     let s = stacked({ user: ['10', '6'], up: '9', hole: '5', extra: ['4'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     s = act(s, 'hit')
     s = act(s, 'stand')
     s = tickUntil(s, 'roundOver')
     s = gameReducer(s, { type: 'NEXT_ROUND' })
-    s = deal(s, 15)
+    s = deal(s, 25)
     expect(s.rewind).toEqual([])
     expect(s.replayCredits).toBe(0)
     expect(canRewind(s)).toBe(false)
@@ -423,19 +423,19 @@ describe('rewind', () => {
 
   it('rewinding a double restores the bet', () => {
     let s = stacked({ user: ['5', '6'], up: '9', hole: '10', extra: ['9'] })
-    s = deal(s, 15)
-    expect(userSeat(s).hands[0].bet).toBe(15)
+    s = deal(s, 25)
+    expect(userSeat(s).hands[0].bet).toBe(25)
     s = act(s, 'double')
-    expect(userSeat(s).hands[0].bet).toBe(30)
+    expect(userSeat(s).hands[0].bet).toBe(50)
     s = rewind(s)
-    expect(userSeat(s).hands[0].bet).toBe(15)
+    expect(userSeat(s).hands[0].bet).toBe(25)
     expect(userSeat(s).hands[0].doubled).toBeFalsy()
     expect(userSeat(s).hands[0].cards).toHaveLength(2)
   })
 
   it('rewinding a split collapses the hands back into one', () => {
     let s = stacked({ user: ['8', '8'], up: '6', hole: '10', extra: ['3', '4'] })
-    s = deal(s, 15)
+    s = deal(s, 25)
     s = act(s, 'split')
     expect(userSeat(s).hands).toHaveLength(2)
     s = rewind(s)
@@ -452,7 +452,7 @@ describe('rewind', () => {
       hole: '10',
       extra: Array(30).fill('A' as Rank),
     })
-    s = deal(s, 15)
+    s = deal(s, 25)
     for (let i = 0; i < 30; i++) s = act(s, 'hit')
     expect(s.rewind.length).toBeLessThanOrEqual(24)
   })
@@ -468,7 +468,7 @@ describe('rebuy and settings deferral', () => {
 
   it('mid-round rule changes wait for the next round', () => {
     let s = stacked({ user: ['10', '6'], up: '7', hole: '10' })
-    s = deal(s, 15)
+    s = deal(s, 25)
     const newRules = { ...s.rules, surrenderAllowed: true }
     s = gameReducer(s, { type: 'UPDATE_RULES', rules: newRules })
     expect(s.rules.surrenderAllowed).toBe(false) // not yet

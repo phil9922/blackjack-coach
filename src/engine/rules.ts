@@ -22,7 +22,7 @@ export const DEFAULT_RULES: TableRules = {
   resplitAces: false,
   dealerPeeks: true,
   surrenderAllowed: false,
-  tableMin: 15,
+  tableMin: 25,
   tableMax: 1000,
   penetration: 0.75,
 }
