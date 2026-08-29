@@ -3,7 +3,6 @@ import type { GameState, GameAction } from '../engine/game'
 import {
   activeSeat,
   currentTrueCount,
-  cardsRemaining,
   countSystemOf,
   userSeat,
   isEvenMoneyOffer,
@@ -16,6 +15,7 @@ import { Controls } from './Controls'
 import { RewindButton } from './RewindButton'
 import { TableLayout } from './TableLayout'
 import { ShoeView, ShoeAnchorContext } from './ShoeView'
+import { CountChip } from './CountChip'
 import { suggestBet } from '../betting/advisor'
 import { BetControls } from './BetControls'
 import { FeedbackPanel, type GamifyNotice, type VerdictEntry } from './FeedbackPanel'
@@ -308,24 +308,7 @@ export function GameScreen({
         )}
 
         {state.settings.mode === 'counting' && state.settings.showCount && (
-          <div
-            className="count-chip"
-            title={
-              countSystemOf(state).balanced
-                ? `${countSystemOf(state).name}: running count / true count`
-                : `${countSystemOf(state).name}: unbalanced, so the running count is the signal`
-            }
-          >
-            {countSystemOf(state).name} · RC {state.runningCount >= 0 ? '+' : ''}
-            {state.runningCount}
-            {countSystemOf(state).balanced && (
-              <>
-                {' '}· TC {currentTrueCount(state) >= 0 ? '+' : ''}
-                {currentTrueCount(state)}
-              </>
-            )}{' '}
-            · {Math.round((cardsRemaining(state) / 52) * 10) / 10} decks left
-          </div>
+          <CountChip state={state} />
         )}
 
         {/* The arc belongs between the dealer and the players, as on a real

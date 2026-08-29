@@ -618,8 +618,13 @@ select:focus-visible {
   color: #b0342a;
 }
 
-.count-chip {
+.count-chip-wrap {
   align-self: center;
+  position: relative;
+}
+
+.count-chip {
+  font: inherit;
   font-family: var(--mono);
   font-size: 0.85rem;
   color: var(--paper);
@@ -627,6 +632,53 @@ select:focus-visible {
   border: 1px solid var(--felt-line);
   padding: 5px 14px;
   border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.count-chip:hover {
+  border-color: var(--accent);
+}
+
+/* A small always-visible affordance that this abbreviated readout can be
+   tapped for an explanation — a hover-only title tooltip doesn't work on
+   touch, and a first-time counter has no reason to guess RC/TC mean anything. */
+.count-chip__q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-size: 0.68rem;
+  line-height: 1;
+  color: var(--paper);
+}
+
+.count-chip__explainer {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.count-chip__explainer p {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.count-chip__explainer p:last-of-type {
+  margin-bottom: 12px;
 }
 
 /* --- seats ------------------------------------------------------------------ */
