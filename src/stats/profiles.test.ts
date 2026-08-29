@@ -16,6 +16,7 @@ import {
 } from './storage'
 import { emptyStats } from './model'
 import { DEFAULT_RULES, type TableRules } from '../engine/rules'
+import type { AiSeatConfig, Settings } from '../engine/game'
 
 // Minimal localStorage for the node test environment.
 function installFakeStorage() {
@@ -98,6 +99,27 @@ describe('profile registry', () => {
     })
     // Untouched fields still come from DEFAULT_RULES.
     expect(loaded.rules.hitSoft17).toBe(DEFAULT_RULES.hitSoft17)
+  })
+
+  it('creates a profile with the AI seats chosen at setup', () => {
+    const seats: AiSeatConfig[] = [{ name: 'Marge', profileId: 'book' }]
+    createProfileWithRules(
+      'Not Alone',
+      { tableMin: 25, tableMax: 1000, decks: 6, surrenderAllowed: false },
+      seats
+    )
+    const loaded = loadPersisted<{ settings: Pick<Settings, 'aiSeats'> }>({
+      settings: { aiSeats: [] },
+    })
+    expect(loaded.settings.aiSeats).toEqual(seats)
+  })
+
+  it('defaults to an empty table when no AI seats are chosen', () => {
+    createProfileWithRules('Solo', { tableMin: 25, tableMax: 1000, decks: 6, surrenderAllowed: false })
+    const loaded = loadPersisted<{ settings: Pick<Settings, 'aiSeats'> }>({
+      settings: { aiSeats: [] },
+    })
+    expect(loaded.settings.aiSeats).toEqual([])
   })
 
   it('rename keeps id and data', () => {

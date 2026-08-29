@@ -464,8 +464,8 @@ export function SettingsScreen({
       {showNewProfile && (
         <NewProfileModal
           onClose={() => setShowNewProfile(false)}
-          onCreate={({ name, tableMin, tableMax, decks, surrenderAllowed }) => {
-            createProfileWithRules(name, { tableMin, tableMax, decks, surrenderAllowed })
+          onCreate={({ name, tableMin, tableMax, decks, surrenderAllowed, aiSeats }) => {
+            createProfileWithRules(name, { tableMin, tableMax, decks, surrenderAllowed }, aiSeats)
             window.location.reload()
           }}
         />

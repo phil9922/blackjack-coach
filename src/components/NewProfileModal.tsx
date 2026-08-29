@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { DEFAULT_RULES } from '../engine/rules'
+import type { AiSeatConfig } from '../engine/game'
+import { AI_PROFILES, AI_NAMES, type AiProfileId } from '../players/profiles'
 
 /** Realistic Vegas shoe sizes — matches the KO key-count table exactly, no rounding needed. */
 const DECK_OPTIONS = [1, 2, 4, 6, 8]
@@ -20,6 +22,7 @@ export function NewProfileModal({
     tableMax: number
     decks: number
     surrenderAllowed: boolean
+    aiSeats: AiSeatConfig[]
   }) => void
 }) {
   const [name, setName] = useState('')
@@ -27,7 +30,21 @@ export function NewProfileModal({
   const [tableMax, setTableMax] = useState(String(DEFAULT_RULES.tableMax))
   const [decks, setDecks] = useState(DEFAULT_RULES.decks)
   const [surrenderAllowed, setSurrenderAllowed] = useState(DEFAULT_RULES.surrenderAllowed)
+  const [aiSeats, setAiSeats] = useState<AiSeatConfig[]>([])
   const nameBox = useRef<HTMLInputElement>(null)
+
+  const setAiCount = (n: number) => {
+    setAiSeats(
+      Array.from({ length: n }, (_, i) => ({
+        name: aiSeats[i]?.name ?? AI_NAMES[i % AI_NAMES.length],
+        profileId: aiSeats[i]?.profileId ?? 'average',
+      }))
+    )
+  }
+
+  const setAiProfile = (i: number, profileId: AiProfileId) => {
+    setAiSeats(aiSeats.map((s, j) => (j === i ? { ...s, profileId } : s)))
+  }
 
   useEffect(() => {
     nameBox.current?.focus()
@@ -47,7 +64,7 @@ export function NewProfileModal({
 
   const submit = () => {
     if (!valid) return
-    onCreate({ name: name.trim(), tableMin: min, tableMax: max, decks, surrenderAllowed })
+    onCreate({ name: name.trim(), tableMin: min, tableMax: max, decks, surrenderAllowed, aiSeats })
   }
 
   return (
@@ -115,6 +132,38 @@ export function NewProfileModal({
             strategy — e.g. 16 vs 10 becomes a surrender)</em>
           </span>
         </label>
+
+        <label className="modal__field">
+          Computer players
+          <select value={aiSeats.length} onChange={(e) => setAiCount(Number(e.target.value))}>
+            {[0, 1, 2, 3, 4].map((n) => (
+              <option key={n} value={n}>
+                {n === 0 ? 'Just me and the dealer' : `${n} other player${n > 1 ? 's' : ''}`}
+              </option>
+            ))}
+          </select>
+        </label>
+        {aiSeats.map((seat, i) => (
+          <label key={i} className="modal__field">
+            {seat.name} plays like
+            <select
+              value={seat.profileId}
+              onChange={(e) => setAiProfile(i, e.target.value as AiProfileId)}
+            >
+              {Object.values(AI_PROFILES).map((p) => (
+                <option key={p.id} value={p.id} title={p.description}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
+        {aiSeats.length > 0 && (
+          <p className="modal__note">
+            You sit at third base (last to act) so you see every card before your turn — the best
+            seat for count practice. This is just for the deal; change it any time in Settings.
+          </p>
+        )}
 
         <div className="ask__actions">
           <button className="btn btn--primary" onClick={submit} disabled={!valid}>

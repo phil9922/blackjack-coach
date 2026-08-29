@@ -1,6 +1,7 @@
 import type { StatsState } from './model'
 import { emptyStats } from './model'
 import { DEFAULT_RULES, type TableRules } from '../engine/rules'
+import { DEFAULT_SETTINGS, type AiSeatConfig } from '../engine/game'
 
 /**
  * All persistence is scoped to a user profile. A small registry tracks the
@@ -101,10 +102,14 @@ export function createProfile(name: string): Profile {
  */
 export function createProfileWithRules(
   name: string,
-  overrides: Pick<TableRules, 'tableMin' | 'tableMax' | 'decks' | 'surrenderAllowed'>
+  overrides: Pick<TableRules, 'tableMin' | 'tableMax' | 'decks' | 'surrenderAllowed'>,
+  aiSeats: AiSeatConfig[] = []
 ): Profile {
   const profile = createProfile(name)
-  savePersisted({ rules: { ...DEFAULT_RULES, ...overrides } })
+  savePersisted({
+    rules: { ...DEFAULT_RULES, ...overrides },
+    settings: { ...DEFAULT_SETTINGS, aiSeats },
+  })
   return profile
 }
 
