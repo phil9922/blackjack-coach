@@ -76,6 +76,12 @@ export function GameScreen({
         setVerdictHistory((prev) =>
           [{ id: state.gradeSeq, grade, xp: stats.stats.lastXp }, ...prev].slice(0, 15)
         )
+        setMobileToast({
+          id: state.gradeSeq,
+          tone: grade.wasCorrect ? 'book' : 'miss',
+          stamp: grade.wasCorrect ? 'BOOK' : 'MISS',
+          headline: grade.explanation.headline,
+        })
       }
     }
   }, [state.gradeSeq, state.lastGrade, stats.stats.lastXp])
@@ -130,27 +136,29 @@ export function GameScreen({
     if (!isUserTurn) setHint(null)
   }, [isUserTurn, state.activeHandIndex, state.gradeSeq])
 
-  // On stacked (mobile) layouts the verdict rail sits below the table, so
-  // bring feedback into view when it lands — and return to the controls once
-  // a paused mistake is acknowledged.
-  const isStacked = () => window.matchMedia('(max-width: 900px)').matches
-  const prevAck = useRef(false)
+  // On stacked (mobile) layouts the verdict rail sits below the table, out of
+  // sight while playing. Rather than yanking the screen down to it on every
+  // action, a small popup surfaces just the headline near the dock and fades
+  // on its own — the rail underneath stays put, fully scrollable, never
+  // auto-scrolled to.
+  const [mobileToast, setMobileToast] = useState<{
+    id: number
+    tone: 'book' | 'miss' | 'hint'
+    stamp: string
+    headline: string
+  } | null>(null)
+  const toastSeq = useRef(0)
   useEffect(() => {
-    if (state.gradeSeq > 0 && isStacked()) {
-      document.querySelector('.rail .verdict')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-  }, [state.gradeSeq])
-  useEffect(() => {
-    if (hint && isStacked()) {
-      document.querySelector('.rail .verdict--hint')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    if (hint) {
+      toastSeq.current -= 1
+      setMobileToast({ id: toastSeq.current, tone: 'hint', stamp: 'HINT', headline: hint.explanation.headline })
     }
   }, [hint])
   useEffect(() => {
-    if (prevAck.current && !state.awaitingAck && isStacked()) {
-      document.querySelector('.dock')?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    }
-    prevAck.current = state.awaitingAck
-  }, [state.awaitingAck])
+    if (!mobileToast) return
+    const t = setTimeout(() => setMobileToast(null), 3400)
+    return () => clearTimeout(t)
+  }, [mobileToast])
 
   // Surface a coach tip at most once per 10 rounds, only when one newly qualifies.
   useEffect(() => {
@@ -259,8 +267,6 @@ export function GameScreen({
           <div className="shuffle-notice">Cut card reached — fresh shoe, count resets to 0</div>
         )}
 
-        <ShoeView state={state} slotRef={shoeSlotRef} />
-
         <section className="dealer" aria-label="Dealer">
           <div className="dealer__label">
             Dealer {dealerValue && <span className="dealer__total">{dealerValue}</span>}
@@ -271,8 +277,8 @@ export function GameScreen({
               const faceDown = isHole && !state.holeRevealed
               return (
                 <CardView
-                  // remounting on reveal is what re-fires the flip animation
-                  key={`${i}-${faceDown ? 'down' : 'up'}`}
+                  // remounting on reveal (or a new round) is what re-fires the animation
+                  key={`${state.handsPlayed}-${i}-${faceDown ? 'down' : 'up'}`}
                   card={c}
                   hidden={faceDown}
                   flipIn={isHole && state.holeRevealed}
@@ -313,6 +319,11 @@ export function GameScreen({
           <CountChip state={state} />
         )}
 
+        {/* The shoe lives in this band too, not pinned to a table corner — on a
+            narrow screen a full dealer hand can spread wide enough to run under
+            a corner-anchored shoe, and its own row never has that problem. */}
+        <ShoeView state={state} slotRef={shoeSlotRef} />
+
         {/* The arc belongs between the dealer and the players, as on a real
             table — giving it its own band means it can never sit under a card. */}
         <TableLayout rules={state.rules} />
@@ -326,9 +337,17 @@ export function GameScreen({
               activeHandIndex={state.activeHandIndex}
               seatIndex={i}
               totalSeats={state.seats.length}
+              roundKey={state.handsPlayed}
             />
           ))}
         </section>
+
+        {mobileToast && (
+          <div key={mobileToast.id} className={`mobile-toast mobile-toast--${mobileToast.tone}`}>
+            <span className="mobile-toast__stamp">{mobileToast.stamp}</span>
+            <p className="mobile-toast__headline">{mobileToast.headline}</p>
+          </div>
+        )}
 
         <section className="dock">
           {state.phase === 'betting' && (

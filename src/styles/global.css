@@ -487,11 +487,12 @@ select:focus-visible {
   border-radius: 999px;
 }
 
-/* The shoe — opposite corner from the drill chip, out of the cards' way. */
+/* The shoe — its own band between the dealer and the players (not pinned to a
+   table corner, where a wide dealer hand could run under it on a narrow
+   screen). */
 .shoe {
-  position: absolute;
-  top: 18px;
-  left: 22px;
+  position: relative;
+  align-self: center;
   z-index: 1;
   display: flex;
   align-items: flex-end;
@@ -787,6 +788,31 @@ select:focus-visible {
   opacity: 0.45;
 }
 
+/* 21 — natural or hard-earned — gets a gold glow the moment the total lands
+   there, not just at settlement. A soft pulse rather than a flash, so it
+   reads as "good news" without competing with the verdict rail. */
+.hand--twenty-one {
+  border-color: var(--accent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 55%, transparent);
+  animation: twenty-one-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes twenty-one-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand--twenty-one {
+    animation: none;
+  }
+}
+
 .hand__label {
   display: flex;
   gap: 8px;
@@ -887,6 +913,10 @@ select:focus-visible {
   padding: calc(var(--card-w) * 0.086) calc(var(--card-w) * 0.103);
   flex-shrink: 0;
   animation: card-in 240ms ease-out;
+  /* A card's own corner index reads left-aligned wherever it sits — the
+     dealer's section centers its own text, and that shouldn't cascade
+     into the rank/suit inside a card that happens to live there. */
+  text-align: left;
 }
 
 @keyframes card-in {
@@ -970,12 +1000,27 @@ select:focus-visible {
   line-height: 1;
 }
 
-.card__pip {
+/* The mirrored index in the opposite corner — same rank/suit as the top
+   left, rotated, exactly like a real card reads from either end. Sized and
+   inset to match the top-left index's own padding-box position. */
+.card__corner--br {
   position: absolute;
-  bottom: calc(var(--card-w) * 0.103);
-  right: calc(var(--card-w) * 0.138);
-  font-size: calc(var(--card-w) * 0.414);
-  opacity: 0.85;
+  bottom: calc(var(--card-w) * 0.086);
+  right: calc(var(--card-w) * 0.103);
+  transform: rotate(180deg);
+  display: block;
+}
+
+/* A large, quiet suit watermark in the middle — not a real pip count (this
+   app never needed one), just enough presence that the card doesn't read as
+   bare between its two corner indices. */
+.card__center-pip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: calc(var(--card-w) * 0.44);
+  opacity: 0.16;
 }
 
 .card--back {
@@ -1012,6 +1057,83 @@ select:focus-visible {
 .dock__waiting {
   color: rgba(255, 255, 255, 0.65);
   font-style: italic;
+}
+
+/* A stand-in for the verdict rail on stacked layouts, where the rail sits
+   below the fold — the headline surfaces here instead of the screen jumping
+   to it, and fades on its own so play never stalls waiting for a tap. */
+.mobile-toast {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-toast {
+    display: block;
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 142px;
+    z-index: 3;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 8px 14px 10px;
+    border-radius: 10px;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    animation: mobile-toast-fade 3.4s ease-in-out forwards;
+  }
+}
+
+.mobile-toast__stamp {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+}
+
+.mobile-toast--book .mobile-toast__stamp {
+  color: var(--book);
+}
+
+.mobile-toast--miss .mobile-toast__stamp {
+  color: var(--miss);
+}
+
+.mobile-toast--hint .mobile-toast__stamp {
+  color: var(--accent-deep);
+}
+
+.mobile-toast__headline {
+  margin: 2px 0 0;
+  font-size: 0.84rem;
+  color: var(--ink);
+}
+
+@keyframes mobile-toast-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  82% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-toast {
+    animation: none;
+  }
 }
 
 .dock__hand {

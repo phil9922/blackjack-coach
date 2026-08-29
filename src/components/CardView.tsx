@@ -95,7 +95,15 @@ export function CardView({
     >
       <span className="card__rank">{card.rank}</span>
       <span className="card__suit">{card.suit}</span>
-      <span className="card__pip">{card.suit}</span>
+      {/* The mirrored index every real card has in the opposite corner —
+          same rank and suit, rotated, so the card reads from either end. */}
+      <span className="card__corner card__corner--br" aria-hidden="true">
+        <span className="card__rank">{card.rank}</span>
+        <span className="card__suit">{card.suit}</span>
+      </span>
+      <span className="card__center-pip" aria-hidden="true">
+        {card.suit}
+      </span>
     </div>
   )
 }

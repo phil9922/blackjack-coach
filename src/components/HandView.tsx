@@ -20,6 +20,7 @@ export function HandView({
   dimmed = false,
   seatIndex = 0,
   totalSeats = 1,
+  roundKey = 0,
 }: {
   hand: PlayerHand
   active: boolean
@@ -32,11 +33,18 @@ export function HandView({
   /** this seat's position in the real deal order (see dealStagger) */
   seatIndex?: number
   totalSeats?: number
+  /** state.handsPlayed — stable within a round, so it's what makes a fresh
+   * deal's cards remount (and animate) instead of reusing last round's DOM
+   * nodes at the same index. */
+  roundKey?: number
 }) {
   const { total, soft } = evaluateHand(hand.cards)
   const bj = isBlackjack(hand.cards, hand.isSplitHand)
   const busted = isBusted(hand.cards)
   const label = bj ? 'Blackjack' : `${soft ? 'soft ' : ''}${total}`
+  // A natural or a hard-earned 21 both deserve the same call-out — the glow
+  // fires the moment the total lands there, not just at settlement.
+  const twentyOne = total === 21
   // A lone hand needs no box or number of its own — those exist to tell split
   // hands apart, and drawing them around a single hand is just noise.
   const split = count > 1
@@ -45,7 +53,7 @@ export function HandView({
     <div
       className={`hand ${split ? 'hand--split' : ''} ${active ? 'hand--active' : ''} ${
         dimmed ? 'hand--dimmed' : ''
-      }`}
+      } ${twentyOne ? 'hand--twenty-one' : ''}`}
       aria-label={split ? `Hand ${index + 1} of ${count}` : undefined}
       aria-current={active ? 'true' : undefined}
     >
@@ -58,7 +66,11 @@ export function HandView({
       <div className="hand__cards">
         {hand.cards.map((c, i) => (
           <CardView
-            key={i}
+            // Keying on round + position (not position alone) means a fresh
+            // deal's cards are genuinely new DOM nodes — the same index
+            // reused across rounds would otherwise just update in place with
+            // no mount, and CardView only animates on mount.
+            key={`${roundKey}-${i}`}
             card={c}
             // A split hand's cards aren't part of the synchronized initial
             // deal (one came from the pair, one's a live post-split draw),
