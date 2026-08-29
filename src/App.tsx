@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useStats } from './hooks/useStats'
 import { useGame } from './hooks/useGame'
 import { GameScreen } from './components/GameScreen'
@@ -7,6 +7,7 @@ import { ProgressScreen } from './components/ProgressScreen'
 import { SkillsScreen } from './components/SkillsScreen'
 import { SettingsScreen } from './components/SettingsScreen'
 import { NewProfileModal } from './components/NewProfileModal'
+import { CountingIntroModal } from './components/CountingIntroModal'
 import type { TrainingMode } from './engine/types'
 import {
   savePersisted,
@@ -37,6 +38,11 @@ export default function App() {
   const [profiles] = useState(getProfiles)
   const [activeProfile] = useState(getActiveProfile)
   const [showNewProfile, setShowNewProfile] = useState(false)
+  // Once per session, not once ever — a persisted flag would need a storage
+  // migration for a explainer that's cheap to just re-show; flipping the
+  // toggle back and forth in the same sitting shouldn't re-open it, though.
+  const seenCountingIntro = useRef(false)
+  const [showCountingIntro, setShowCountingIntro] = useState(false)
 
   const onProfileChange = (value: string) => {
     if (value === '__new') {
@@ -53,6 +59,10 @@ export default function App() {
     const settings = { ...(state.pendingSettings ?? state.settings), mode }
     dispatch({ type: 'UPDATE_SETTINGS', settings })
     savePersisted({ rules: state.pendingRules ?? state.rules, settings, buyIn: state.totalBuyIn })
+    if (mode === 'counting' && !seenCountingIntro.current) {
+      seenCountingIntro.current = true
+      setShowCountingIntro(true)
+    }
   }
   const toggleDrill = () => {
     const current = state.pendingSettings ?? state.settings
@@ -171,6 +181,13 @@ export default function App() {
             // A full reload re-initializes every subsystem from the new profile's data.
             window.location.reload()
           }}
+        />
+      )}
+
+      {showCountingIntro && (
+        <CountingIntroModal
+          system={countSystemOf(state)}
+          onClose={() => setShowCountingIntro(false)}
         />
       )}
     </div>
