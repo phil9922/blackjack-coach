@@ -33,9 +33,10 @@ export function HandView({
   /** this seat's position in the real deal order (see dealStagger) */
   seatIndex?: number
   totalSeats?: number
-  /** state.handsPlayed — stable within a round, so it's what makes a fresh
-   * deal's cards remount (and animate) instead of reusing last round's DOM
-   * nodes at the same index. */
+  /** state.dealSeq — stable within a round (unlike handsPlayed, which bumps
+   * at settlement, while these same cards are still on screen), so it's
+   * what makes a fresh deal's cards remount (and animate) instead of
+   * reusing last round's DOM nodes at the same index. */
   roundKey?: number
 }) {
   const { total, soft } = evaluateHand(hand.cards)

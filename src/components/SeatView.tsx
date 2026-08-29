@@ -16,7 +16,7 @@ export function SeatView({
   /** this seat's position in the real deal order (see dealStagger) */
   seatIndex: number
   totalSeats: number
-  /** state.handsPlayed — see HandView */
+  /** state.dealSeq — see HandView */
   roundKey: number
 }) {
   const profile = seat.profileId ? AI_PROFILES[seat.profileId] : null

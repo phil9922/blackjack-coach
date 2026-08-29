@@ -135,6 +135,14 @@ export interface GameState {
   lastQuiz: QuizResult | null
   handsSinceQuiz: number
   handsPlayed: number
+  /**
+   * Bumped once, in `deal()`, when a new round's cards actually go out —
+   * unlike handsPlayed (which bumps at settlement, while the just-finished
+   * round's cards are still on screen), this is what the UI keys a round's
+   * cards on so they remount — and animate — only when a real new deal
+   * happens, not the moment the previous one settles.
+   */
+  dealSeq: number
   /** label of the drill spot this round was stacked toward, if any */
   drilledLabel: string | null
   /**
@@ -224,6 +232,7 @@ export function initGame(opts?: {
     lastQuiz: null,
     handsSinceQuiz: 0,
     handsPlayed: 0,
+    dealSeq: 0,
     drilledLabel: null,
     burnedCards: [],
     pendingRules: null,
@@ -527,6 +536,7 @@ function deal(state: GameState, amount: number, drill?: DrillPlan): GameState {
   let s: GameState = {
     ...state,
     userBet: bet,
+    dealSeq: state.dealSeq + 1,
     justShuffled: false,
     lastGrade: null,
     awaitingAck: false,
@@ -775,6 +785,7 @@ function rewindOnce(state: GameState): GameState {
     // carrying it forward means a restore can never resurrect an already-recorded
     // round or quiz.
     handsPlayed: state.handsPlayed,
+    dealSeq: state.dealSeq,
     roundResults: state.roundResults,
     lastQuiz: state.lastQuiz,
     handsSinceQuiz: state.handsSinceQuiz,

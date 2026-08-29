@@ -277,8 +277,10 @@ export function GameScreen({
               const faceDown = isHole && !state.holeRevealed
               return (
                 <CardView
-                  // remounting on reveal (or a new round) is what re-fires the animation
-                  key={`${state.handsPlayed}-${i}-${faceDown ? 'down' : 'up'}`}
+                  // remounting on reveal (or a new deal) is what re-fires the animation —
+                  // dealSeq, not handsPlayed, so settling the round in place (the cards
+                  // don't change) never triggers a spurious redraw of the finished hand
+                  key={`${state.dealSeq}-${i}-${faceDown ? 'down' : 'up'}`}
                   card={c}
                   hidden={faceDown}
                   flipIn={isHole && state.holeRevealed}
@@ -337,7 +339,7 @@ export function GameScreen({
               activeHandIndex={state.activeHandIndex}
               seatIndex={i}
               totalSeats={state.seats.length}
-              roundKey={state.handsPlayed}
+              roundKey={state.dealSeq}
             />
           ))}
         </section>
