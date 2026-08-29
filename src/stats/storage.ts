@@ -101,7 +101,7 @@ export function createProfile(name: string): Profile {
  */
 export function createProfileWithRules(
   name: string,
-  overrides: Pick<TableRules, 'tableMin' | 'tableMax' | 'decks'>
+  overrides: Pick<TableRules, 'tableMin' | 'tableMax' | 'decks' | 'surrenderAllowed'>
 ): Profile {
   const profile = createProfile(name)
   savePersisted({ rules: { ...DEFAULT_RULES, ...overrides } })

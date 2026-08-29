@@ -14,12 +14,19 @@ export function NewProfileModal({
   onCreate,
 }: {
   onClose: () => void
-  onCreate: (input: { name: string; tableMin: number; tableMax: number; decks: number }) => void
+  onCreate: (input: {
+    name: string
+    tableMin: number
+    tableMax: number
+    decks: number
+    surrenderAllowed: boolean
+  }) => void
 }) {
   const [name, setName] = useState('')
   const [tableMin, setTableMin] = useState(String(DEFAULT_RULES.tableMin))
   const [tableMax, setTableMax] = useState(String(DEFAULT_RULES.tableMax))
   const [decks, setDecks] = useState(DEFAULT_RULES.decks)
+  const [surrenderAllowed, setSurrenderAllowed] = useState(DEFAULT_RULES.surrenderAllowed)
   const nameBox = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -40,7 +47,7 @@ export function NewProfileModal({
 
   const submit = () => {
     if (!valid) return
-    onCreate({ name: name.trim(), tableMin: min, tableMax: max, decks })
+    onCreate({ name: name.trim(), tableMin: min, tableMax: max, decks, surrenderAllowed })
   }
 
   return (
@@ -95,6 +102,18 @@ export function NewProfileModal({
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="settings__row settings__row--check">
+          <input
+            type="checkbox"
+            checked={surrenderAllowed}
+            onChange={(e) => setSurrenderAllowed(e.target.checked)}
+          />
+          <span>
+            Allow late surrender <em>(off at most real tables; turning it on changes correct
+            strategy — e.g. 16 vs 10 becomes a surrender)</em>
+          </span>
         </label>
 
         <div className="ask__actions">

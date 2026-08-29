@@ -487,6 +487,72 @@ select:focus-visible {
   border-radius: 999px;
 }
 
+/* The shoe — opposite corner from the drill chip, out of the cards' way. */
+.shoe {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.shoe__stack {
+  position: relative;
+  width: calc(var(--card-w) * 0.46);
+  height: calc(var(--card-h) * 0.46 + var(--layers, 1) * 2px);
+}
+
+.shoe__card {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--i) * 2px);
+  width: 100%;
+  height: calc(var(--card-h) * 0.46);
+  border-radius: calc(var(--card-w) * 0.06);
+  background: repeating-linear-gradient(45deg, var(--card-back) 0 4px, var(--card-back-alt) 4px 8px);
+  border: calc(var(--card-w) * 0.035) solid var(--paper);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* A card being drawn: the top sheet slides toward the dealer arc and fades. */
+.shoe.is-dealing .shoe__card:last-child {
+  animation: shoe-deal 220ms ease-out;
+}
+
+@keyframes shoe-deal {
+  from {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(16px, -12px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shoe.is-dealing .shoe__card:last-child {
+    animation: none;
+  }
+}
+
+.shoe__count {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--felt-line);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.shoe__count-total {
+  opacity: 0.6;
+}
+
 .burn {
   align-self: center;
   max-width: min(620px, 100%);
@@ -1154,6 +1220,29 @@ select:focus-visible {
   color: var(--ink-soft);
   font-size: 0.92rem;
   line-height: 1.5;
+}
+
+/* A running record of graded hands, newest on top — not a single card that
+   keeps getting replaced. Older entries fade slightly so the current hand
+   still reads as "now" without the history disappearing. */
+.verdict-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.verdict-timeline .verdict:not(:first-child) {
+  opacity: 0.72;
+}
+
+.verdict__hand {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
 }
 
 .verdict {

@@ -10,10 +10,23 @@ import type { StatsApi } from '../hooks/useStats'
 import { RewindButton } from './RewindButton'
 import { AskCoachModal } from './AskCoachModal'
 import type { BetAdvice } from '../betting/advisor'
+import type { GradedDecision } from '../strategy/types'
+import { handKeyLabel } from '../strategy/types'
 
 export interface GamifyNotice {
   kind: 'levelup' | 'badge'
   text: string
+}
+
+export interface VerdictEntry {
+  /** state.gradeSeq at the moment this verdict landed — stable across re-renders */
+  id: number
+  grade: GradedDecision
+  xp: XpEvent | null
+}
+
+function handLabel(grade: GradedDecision): string {
+  return grade.key ? `${handKeyLabel(grade.key)} vs ${grade.dealerUp}` : 'Insurance'
 }
 
 export function FeedbackPanel({
@@ -22,7 +35,7 @@ export function FeedbackPanel({
   hint,
   coachTip,
   onDismissTip,
-  lastXp,
+  verdictHistory,
   notice,
   onDismissNotice,
   coach,
@@ -36,15 +49,13 @@ export function FeedbackPanel({
   betAdvice: BetAdvice | null
   coachTip: CoachTip | null
   onDismissTip: () => void
-  lastXp: XpEvent | null
+  /** every graded decision this session, newest first — a running record, not a single card */
+  verdictHistory: VerdictEntry[]
   notice: GamifyNotice | null
   onDismissNotice: () => void
   coach: AiCoachApi
   stats: StatsApi
 }) {
-  const grade = state.lastGrade
-  const xpSkill = lastXp ? SKILL_BY_ID[lastXp.skill as SkillId] : null
-
   // The live coach interrupts only for something newly worth stopping for, so
   // it is silent most of the time by design. This is the way to ask it outright.
   const [asking, setAsking] = useState(false)
@@ -86,32 +97,52 @@ export function FeedbackPanel({
         </div>
       )}
 
-      {grade && (
-        <div className={`verdict ${grade.wasCorrect ? 'verdict--book' : 'verdict--miss'}`}>
-          <span className="verdict__stamp">{grade.wasCorrect ? 'BOOK' : 'MISS'}</span>
-          <h3 className="verdict__headline">{grade.explanation.headline}</h3>
-          <p className="verdict__body">{grade.explanation.body}</p>
-          {lastXp && xpSkill && (
-            <span className="verdict__xp">
-              +{lastXp.amount} XP · {xpSkill.name}
-            </span>
-          )}
-          {grade.hinted && <p className="verdict__note">Assisted (hint used) — not counted.</p>}
-          {grade.replayed && (
-            <p className="verdict__note">Replay after a rewind — not counted.</p>
-          )}
-          <div className="verdict__actions">
-            {state.awaitingAck && (
-              <button className="btn btn--primary" onClick={() => dispatch({ type: 'ACKNOWLEDGE' })}>
-                Got it — continue
-              </button>
-            )}
-            <RewindButton state={state} dispatch={dispatch} variant="rail" />
-          </div>
+      {verdictHistory.length > 0 && (
+        <div className="verdict-timeline">
+          {verdictHistory.map((entry, i) => {
+            const isLatest = i === 0
+            const grade = entry.grade
+            const xpSkill = entry.xp ? SKILL_BY_ID[entry.xp.skill as SkillId] : null
+            return (
+              <div
+                key={entry.id}
+                className={`verdict ${grade.wasCorrect ? 'verdict--book' : 'verdict--miss'}`}
+              >
+                <span className="verdict__hand">{handLabel(grade)}</span>
+                <span className="verdict__stamp">{grade.wasCorrect ? 'BOOK' : 'MISS'}</span>
+                <h3 className="verdict__headline">{grade.explanation.headline}</h3>
+                <p className="verdict__body">{grade.explanation.body}</p>
+                {entry.xp && xpSkill && (
+                  <span className="verdict__xp">
+                    +{entry.xp.amount} XP · {xpSkill.name}
+                  </span>
+                )}
+                {grade.hinted && <p className="verdict__note">Assisted (hint used) — not counted.</p>}
+                {grade.replayed && (
+                  <p className="verdict__note">Replay after a rewind — not counted.</p>
+                )}
+                {/* Rewind and acknowledge act on the live hand, so only the newest
+                    entry — the one still tied to current game state — gets them. */}
+                {isLatest && (
+                  <div className="verdict__actions">
+                    {state.awaitingAck && (
+                      <button
+                        className="btn btn--primary"
+                        onClick={() => dispatch({ type: 'ACKNOWLEDGE' })}
+                      >
+                        Got it — continue
+                      </button>
+                    )}
+                    <RewindButton state={state} dispatch={dispatch} variant="rail" />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
-      {!grade && !hint && !betAdvice && (
+      {verdictHistory.length === 0 && !hint && !betAdvice && (
         <p className="rail__empty">
           Play a hand. Every decision you make gets graded against the book here — with the why,
           not just the what.

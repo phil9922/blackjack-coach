@@ -166,8 +166,8 @@ export default function App() {
       {showNewProfile && (
         <NewProfileModal
           onClose={() => setShowNewProfile(false)}
-          onCreate={({ name, tableMin, tableMax, decks }) => {
-            createProfileWithRules(name, { tableMin, tableMax, decks })
+          onCreate={({ name, tableMin, tableMax, decks, surrenderAllowed }) => {
+            createProfileWithRules(name, { tableMin, tableMax, decks, surrenderAllowed })
             // A full reload re-initializes every subsystem from the new profile's data.
             window.location.reload()
           }}

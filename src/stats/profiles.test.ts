@@ -82,10 +82,20 @@ describe('profile registry', () => {
   })
 
   it('creates a profile with chosen table rules, not the defaults', () => {
-    const second = createProfileWithRules('High roller', { tableMin: 100, tableMax: 5000, decks: 2 })
+    const second = createProfileWithRules('High roller', {
+      tableMin: 100,
+      tableMax: 5000,
+      decks: 2,
+      surrenderAllowed: true,
+    })
     expect(getActiveProfile().id).toBe(second.id)
     const loaded = loadPersisted<{ rules: TableRules }>({ rules: DEFAULT_RULES })
-    expect(loaded.rules).toMatchObject({ tableMin: 100, tableMax: 5000, decks: 2 })
+    expect(loaded.rules).toMatchObject({
+      tableMin: 100,
+      tableMax: 5000,
+      decks: 2,
+      surrenderAllowed: true,
+    })
     // Untouched fields still come from DEFAULT_RULES.
     expect(loaded.rules.hitSoft17).toBe(DEFAULT_RULES.hitSoft17)
   })

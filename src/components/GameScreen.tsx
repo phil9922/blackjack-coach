@@ -15,9 +15,10 @@ import { SeatView } from './SeatView'
 import { Controls } from './Controls'
 import { RewindButton } from './RewindButton'
 import { TableLayout } from './TableLayout'
+import { ShoeView } from './ShoeView'
 import { suggestBet } from '../betting/advisor'
 import { BetControls } from './BetControls'
-import { FeedbackPanel, type GamifyNotice } from './FeedbackPanel'
+import { FeedbackPanel, type GamifyNotice, type VerdictEntry } from './FeedbackPanel'
 import { CountQuizModal } from './CountQuizModal'
 import { SKILLS, skillLevel } from '../gamify/skills'
 import { ACHIEVEMENTS } from '../gamify/achievements'
@@ -59,14 +60,23 @@ export function GameScreen({
     prevCards.current = state.nextCard
   }, [state.nextCard])
 
-  // Verdict chime.
+  // Verdict chime, and the rail's running history — each graded decision joins
+  // the timeline instead of replacing the last one, so a run of hands stays
+  // readable as a record rather than a single card that keeps refreshing.
   const prevGrade = useRef(0)
+  const [verdictHistory, setVerdictHistory] = useState<VerdictEntry[]>([])
   useEffect(() => {
     if (state.gradeSeq > prevGrade.current) {
       prevGrade.current = state.gradeSeq
-      if (state.lastGrade) sfx(state.lastGrade.wasCorrect ? 'correct' : 'miss')
+      if (state.lastGrade) {
+        sfx(state.lastGrade.wasCorrect ? 'correct' : 'miss')
+        const grade = state.lastGrade
+        setVerdictHistory((prev) =>
+          [{ id: state.gradeSeq, grade, xp: stats.stats.lastXp }, ...prev].slice(0, 15)
+        )
+      }
     }
-  }, [state.gradeSeq, state.lastGrade])
+  }, [state.gradeSeq, state.lastGrade, stats.stats.lastXp])
 
   // Chips on a winning round.
   const prevSettled = useRef(0)
@@ -246,6 +256,8 @@ export function GameScreen({
           <div className="shuffle-notice">Cut card reached — fresh shoe, count resets to 0</div>
         )}
 
+        <ShoeView state={state} />
+
         <section className="dealer" aria-label="Dealer">
           <div className="dealer__label">
             Dealer {dealerValue && <span className="dealer__total">{dealerValue}</span>}
@@ -410,7 +422,7 @@ export function GameScreen({
         betAdvice={betAdvice}
         coachTip={coachTip}
         onDismissTip={() => setCoachTip(null)}
-        lastXp={stats.stats.lastXp}
+        verdictHistory={verdictHistory}
         notice={notice}
         onDismissNotice={() => setNotice(null)}
         coach={coach}
