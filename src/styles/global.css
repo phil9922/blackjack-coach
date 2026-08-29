@@ -491,12 +491,26 @@ select:focus-visible {
    table corner, where a wide dealer hand could run under it on a narrow
    screen). */
 .shoe {
-  position: relative;
-  align-self: center;
+  position: absolute;
+  top: 18px;
+  left: 22px;
   z-index: 1;
   display: flex;
   align-items: flex-end;
   gap: 8px;
+}
+
+/* On a narrow screen the dealer's hand can spread wide enough to run under a
+   corner-anchored shoe, so it drops into normal flow in its own band between
+   the dealer and the seats instead — left-aligned, same as everything else
+   on the felt at this width, not centered. */
+@media (max-width: 900px) {
+  .shoe {
+    position: relative;
+    top: auto;
+    left: auto;
+    align-self: flex-start;
+  }
 }
 
 /* The shoe body itself — a dark acrylic dealing shoe, the way a real one

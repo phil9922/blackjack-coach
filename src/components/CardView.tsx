@@ -49,7 +49,12 @@ function useDealFromShoe(
       el.style.transition = ''
       el.style.transform = ''
       el.style.opacity = ''
-      el.style.animation = ''
+      // Stays suppressed, not cleared: clearing it to '' would hand control
+      // back to .card's own `animation: card-in`, which replays from
+      // scratch — a flash — the instant the inline override disappears.
+      // The card already arrived via the shoe slide; the fallback deal-in
+      // is only for when there was never a shoe to slide from.
+      el.style.animation = 'none'
     }
     const t = setTimeout(reset, delayMs + DEAL_MS + 30)
     return () => {
