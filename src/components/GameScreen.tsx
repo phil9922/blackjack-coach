@@ -15,7 +15,7 @@ import { SeatView } from './SeatView'
 import { Controls } from './Controls'
 import { RewindButton } from './RewindButton'
 import { TableLayout } from './TableLayout'
-import { ShoeView } from './ShoeView'
+import { ShoeView, ShoeAnchorContext } from './ShoeView'
 import { suggestBet } from '../betting/advisor'
 import { BetControls } from './BetControls'
 import { FeedbackPanel, type GamifyNotice, type VerdictEntry } from './FeedbackPanel'
@@ -41,6 +41,7 @@ export function GameScreen({
   stats: StatsApi
   coach: AiCoachApi
 }) {
+  const shoeSlotRef = useRef<HTMLDivElement>(null)
   const [hint, setHint] = useState<Hint | null>(null)
   const [coachTip, setCoachTip] = useState<CoachTip | null>(null)
   const [notice, setNotice] = useState<GamifyNotice | null>(null)
@@ -247,6 +248,7 @@ export function GameScreen({
     <div className="game">
       {/* Card size is a share of the felt divided by however many seats are on
           it, so adding players shrinks the cards instead of wrapping the row. */}
+      <ShoeAnchorContext.Provider value={shoeSlotRef}>
       <div
         className="table"
         data-phase={state.phase}
@@ -256,7 +258,7 @@ export function GameScreen({
           <div className="shuffle-notice">Cut card reached — fresh shoe, count resets to 0</div>
         )}
 
-        <ShoeView state={state} />
+        <ShoeView state={state} slotRef={shoeSlotRef} />
 
         <section className="dealer" aria-label="Dealer">
           <div className="dealer__label">
@@ -414,6 +416,7 @@ export function GameScreen({
           )}
         </section>
       </div>
+      </ShoeAnchorContext.Provider>
 
       <FeedbackPanel
         state={state}

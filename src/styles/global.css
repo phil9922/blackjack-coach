@@ -498,6 +498,21 @@ select:focus-visible {
   gap: 8px;
 }
 
+/* The shoe body itself — a dark acrylic dealing shoe, the way a real one
+   sits on the felt, angled slightly toward the dealer. */
+.shoe__box {
+  position: relative;
+  padding: 7px 7px 12px;
+  background: linear-gradient(165deg, #3a3a3e 0%, #18181a 55%, #000 100%);
+  border-radius: 9px 9px 4px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transform: perspective(180px) rotateX(6deg);
+  transform-origin: bottom center;
+}
+
 .shoe__stack {
   position: relative;
   width: calc(var(--card-w) * 0.46);
@@ -516,7 +531,20 @@ select:focus-visible {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* A card being drawn: the top sheet slides toward the dealer arc and fades. */
+/* The mouth of the shoe — a bright seam low on the front face, where every
+   dealt card actually slides out from (see CardView's shoe-anchor slide). */
+.shoe__slot {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 5px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+/* The top card lifting slightly as one leaves — a small tell, not a flight
+   path; the real travel is CardView's own shoe-to-seat slide. */
 .shoe.is-dealing .shoe__card:last-child {
   animation: shoe-deal 220ms ease-out;
 }
@@ -527,8 +555,8 @@ select:focus-visible {
     opacity: 1;
   }
   to {
-    transform: translate(16px, -12px);
-    opacity: 0;
+    transform: translate(6px, -6px);
+    opacity: 0.4;
   }
 }
 
