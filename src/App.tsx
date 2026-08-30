@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStats } from './hooks/useStats'
 import { useGame } from './hooks/useGame'
 import { GameScreen } from './components/GameScreen'
@@ -43,6 +43,22 @@ export default function App() {
   // toggle back and forth in the same sitting shouldn't re-open it, though.
   const seenCountingIntro = useRef(false)
   const [showCountingIntro, setShowCountingIntro] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
+
+  // On mobile, .table is bounded to the viewport height below the header
+  // (see .table under max-width: 900px) instead of letting the whole page
+  // scroll — the header wraps to a different number of rows depending on
+  // viewport width, so its height isn't a constant to hardcode.
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const set = () =>
+      document.documentElement.style.setProperty('--header-h', `${el.getBoundingClientRect().height}px`)
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const onProfileChange = (value: string) => {
     if (value === '__new') {
@@ -76,7 +92,7 @@ export default function App() {
 
   return (
     <div className={`app ${screen === 'table' ? 'app--table' : ''}`}>
-      <header className="rail-top">
+      <header className="rail-top" ref={headerRef}>
         <h1 className="brand">
           <span className="brand__mark">♠</span> Blackjack Coach
         </h1>

@@ -1068,6 +1068,62 @@ select:focus-visible {
   background: linear-gradient(180deg, transparent 0%, var(--felt-deep) 62%);
 }
 
+/*
+ * On mobile the felt was never a bounded box the way it is on desktop (see
+ * .app--table below) — `.table` just grew to fit its content, and the whole
+ * page scrolled. That breaks a sticky dock two different ways:
+ *
+ *  - `position: sticky` only pins within its own scrolling ancestor. With no
+ *    bounded ancestor, that ancestor is the whole page — so at whatever
+ *    scroll position you're actually at, the "stuck" dock isn't necessarily
+ *    sitting below real content at all, it's just wherever flow left it.
+ *  - `position: fixed` (tried first) pins to the *viewport*, not the
+ *    document, so it floats over whatever page content happens to be
+ *    scrolled to that spot right now — reserving space at the bottom of the
+ *    document (e.g. via padding) does nothing for it at scrollY 0, where a
+ *    tall page still has real content (the player's hand) under the fold.
+ *
+ * The fix is the one desktop already uses: bound `.table` itself to exactly
+ * the viewport height below the header, so it has its own internal scrollbar
+ * for anything taller than that (many seats, a split), and a plain sticky
+ * dock pins correctly to the bottom of that bounded, *actually* scrolling
+ * box — the same mechanism as desktop, just measured via JS (--header-h,
+ * see App.tsx) instead of a `100vh` grid row, since the header's own height
+ * isn't fixed here.
+ */
+@media (max-width: 900px) {
+  .table {
+    /* dvh accounts for the browser chrome that vh doesn't (Safari's
+       collapsing address bar) — the vh line is a fallback for browsers that
+       don't parse dvh at all, in which case this whole declaration is
+       invalid and skipped, leaving the first one standing. */
+    height: calc(100vh - var(--header-h, 170px));
+    height: calc(100dvh - var(--header-h, 170px));
+    overflow-y: auto;
+  }
+
+  /* .seats already has flex: 1 (it absorbs the felt's spare height on its
+     own) so it — not an auto margin on the dock — is what's responsible for
+     reaching the bottom when content is short. In practice its grown size
+     runs a little past what's actually left once the sticky dock's own
+     height is accounted for, close enough to zero to read as a rounding
+     artifact rather than a real deficit — this margin is a deliberate,
+     generous floor under it instead of chasing the exact pixel. */
+  .seats {
+    margin-bottom: 20px;
+  }
+
+  .dock {
+    /* The desktop bleed above assumes .table's 26px padding; mobile's is
+       narrower (see .table below 700px) and a mismatched bleed is exactly
+       what pushed the dock 14px past the right edge into a horizontal
+       scrollbar. Not worth chasing the padding at every breakpoint — it
+       just sits inside the felt's own edge here instead. */
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
 .dock__waiting {
   color: rgba(255, 255, 255, 0.65);
   font-style: italic;
@@ -1086,8 +1142,11 @@ select:focus-visible {
     position: fixed;
     left: 12px;
     right: 12px;
-    bottom: 142px;
-    z-index: 3;
+    /* Top, not bottom — the dock now lives fixed at the bottom of the
+       screen (see .dock), and a toast stacked on top of it would cover
+       the very buttons it's meant to leave clear. */
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
+    z-index: 6;
     max-width: 420px;
     margin: 0 auto;
     padding: 8px 14px 10px;
@@ -2744,10 +2803,15 @@ select:focus-visible {
     font-size: 0.85rem;
   }
 
-  /* Table: no desktop min-height (kills the dead gap), tighter padding. */
+  /* Table: no desktop min-height (kills the dead gap), tighter padding.
+     Bottom padding is left off the shorthand deliberately — nothing below
+     900px needs to touch it, and the shorthand would otherwise silently
+     reset whatever the base rule or another breakpoint had set there. */
   .table {
     min-height: 0;
-    padding: 14px 12px 16px;
+    padding-top: 14px;
+    padding-left: 12px;
+    padding-right: 12px;
     gap: 12px;
   }
 
