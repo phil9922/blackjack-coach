@@ -19,6 +19,7 @@ import { CountChip } from './CountChip'
 import { dealerDealDelayMs } from './dealStagger'
 import { suggestBet } from '../betting/advisor'
 import { BetControls } from './BetControls'
+import { WinBurst } from './WinBurst'
 import { FeedbackPanel, type GamifyNotice, type VerdictEntry } from './FeedbackPanel'
 import { CountQuizModal } from './CountQuizModal'
 import { SKILLS, skillLevel } from '../gamify/skills'
@@ -86,15 +87,36 @@ export function GameScreen({
     }
   }, [state.gradeSeq, state.lastGrade, stats.stats.lastXp])
 
-  // Chips on a winning round.
+  // Chips and a burst of sparks on a winning round.
   const prevSettled = useRef(0)
+  const [winBurst, setWinBurst] = useState<{ id: number; net: number; blackjack: boolean } | null>(
+    null
+  )
   useEffect(() => {
     if (state.phase === 'roundOver' && state.handsPlayed > prevSettled.current) {
       prevSettled.current = state.handsPlayed
-      const net = state.roundResults?.filter((r) => r.isUser).reduce((s, r) => s + r.net, 0) ?? 0
-      if (net > 0) sfx('chip')
+      const mine = state.roundResults?.filter((r) => r.isUser) ?? []
+      const net = mine.reduce((s, r) => s + r.net, 0)
+      if (net > 0) {
+        sfx('chip')
+        setWinBurst({
+          id: state.handsPlayed,
+          net,
+          blackjack: mine.some((r) => r.result === 'blackjack'),
+        })
+      }
     }
   }, [state.phase, state.handsPlayed, state.roundResults])
+  useEffect(() => {
+    if (!winBurst) return
+    const t = setTimeout(() => setWinBurst(null), 1800)
+    return () => clearTimeout(t)
+  }, [winBurst])
+  // Dealing the next hand ends the party early rather than letting it linger
+  // over fresh cards.
+  useEffect(() => {
+    if (state.phase !== 'roundOver') setWinBurst(null)
+  }, [state.phase])
 
   // Level-up notices: compare each skill's level against the previous render.
   useEffect(() => {
@@ -439,6 +461,8 @@ export function GameScreen({
         coach={coach}
         stats={stats}
       />
+
+      {winBurst && <WinBurst key={winBurst.id} net={winBurst.net} blackjack={winBurst.blackjack} />}
 
       {state.phase === 'countQuiz' && (
         <CountQuizModal dispatch={dispatch} system={countSystemOf(state)} />

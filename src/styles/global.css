@@ -1002,6 +1002,130 @@ select:focus-visible {
   }
 }
 
+/* --- win burst ------------------------------------------------------------- */
+
+/*
+ * Fixed over the whole screen (not inside .table, whose mobile scrollbox would
+ * clip it) but below the real modals at z-index 50. pointer-events: none is
+ * the important line: a celebration must never cost a tap, so the buttons
+ * underneath stay live while it plays out.
+ */
+.win-burst {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.win-burst__card {
+  position: relative;
+  padding: 16px 30px 18px;
+  border-radius: 16px;
+  background: var(--paper);
+  border: 2px solid var(--accent);
+  box-shadow:
+    0 0 0 6px rgba(201, 162, 39, 0.22),
+    0 18px 50px rgba(0, 0, 0, 0.55);
+  text-align: center;
+  animation: win-card 1800ms cubic-bezier(0.2, 0.9, 0.3, 1.15) forwards;
+}
+
+.win-burst__stamp {
+  display: block;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.26em;
+  color: var(--book);
+}
+
+.win-burst--blackjack .win-burst__stamp {
+  font-size: 1.05rem;
+  color: var(--accent-deep);
+}
+
+.win-burst__net {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+/* Each spark shoots straight out from the centre along its own angle: rotate
+   first, then translate along the rotated axis, so one keyframe serves every
+   direction. */
+.win-burst__spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--s);
+  height: var(--s);
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(var(--a)) translateY(0);
+  animation: win-spark 1100ms cubic-bezier(0.1, 0.8, 0.3, 1) var(--dl) forwards;
+}
+
+@keyframes win-card {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  12% {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+  22% {
+    transform: scale(1);
+  }
+  78% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.96) translateY(-10px);
+    opacity: 0;
+  }
+}
+
+@keyframes win-spark {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--a)) translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(var(--d) * -1)) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes win-card-still {
+  0%,
+  82% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win-burst__spark {
+    display: none;
+  }
+
+  .win-burst__card {
+    animation: win-card-still 1800ms linear forwards;
+  }
+}
+
 .card--red {
   color: #b0342a;
 }
@@ -1129,6 +1253,14 @@ select:focus-visible {
      generous floor under it instead of chasing the exact pixel. */
   .seats {
     margin-bottom: 20px;
+  }
+
+  /* While a bet is being sized the seats are empty outlines, and on a short
+     phone screen the tall betting dock sits right on top of them — a ghost
+     "You" between the chips. Keep the layout (visibility, not display) and
+     just don't paint them until the cards land. */
+  .table[data-phase='betting'] .seats {
+    visibility: hidden;
   }
 
   .dock {

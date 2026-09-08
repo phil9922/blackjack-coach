@@ -1010,7 +1010,16 @@ function settleRound(state: GameState): GameState {
 // --- next round / quiz -----------------------------------------------------
 
 function toNextRound(state: GameState): GameState {
-  let s = state
+  // The dealer sweeps the felt before the next bet. Leaving the settled hands
+  // up put the betting controls on top of the player's cards on a short
+  // phone screen. The shoe and count are untouched — every one of these
+  // cards was counted as it was dealt or revealed.
+  let s: GameState = {
+    ...state,
+    seats: state.seats.map((seat) => ({ ...seat, hands: [], insurance: null })),
+    dealerCards: [],
+    holeRevealed: false,
+  }
   if (s.pendingRules) {
     s = { ...s, rules: s.pendingRules, pendingRules: null, pendingShuffle: true }
   }
