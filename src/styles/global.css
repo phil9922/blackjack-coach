@@ -302,6 +302,15 @@ select:focus-visible {
   .main--table .rail {
     min-height: 0;
   }
+
+  /* .table has no scroll container of its own here (the rail scrolls itself
+     instead — see the comment above), so on a short window the page scrolls
+     and the sticky dock can end up overlapping the last row of seats instead
+     of sitting below them. Padding sized to the dock's own min-height gives
+     seats room to scroll fully clear of it. */
+  .seats {
+    padding-bottom: 130px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1057,6 +1066,15 @@ select:focus-visible {
   bottom: 0;
   z-index: 2;
   min-height: 130px;
+  /* .seats uses `flex: 1` (flex-basis: 0%), so the shrink algorithm treats it
+     as needing zero space and piles all the shrinking onto auto-basis
+     siblings instead — on a short window that crushed the dock's own box
+     down below its actual content height (buttons, "Dealer plays…", the
+     split-hand label) while `overflow: visible` kept rendering that content
+     at full size, spilling it out over the cards above. flex-shrink: 0 keeps
+     the dock at its real height always; .table's own scroll (see below)
+     handles genuine overflow instead of letting the dock collapse. */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
