@@ -1028,7 +1028,16 @@ select:focus-visible {
  */
 .win-burst {
   position: fixed;
-  inset: 0;
+  /* Not `inset: 0`. On iOS Safari a fixed box anchored to the bottom is
+     sized to the layout viewport, which runs on under the collapsing
+     toolbar — so "centred" landed well below the middle of what is
+     actually visible. Size it to the dynamic viewport instead (the vh line
+     is the fallback for browsers without dvh). */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100dvh;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -1884,7 +1893,14 @@ select:focus-visible {
 
 .modal-backdrop {
   position: fixed;
-  inset: 0;
+  /* Sized to the dynamic viewport rather than `inset: 0` for the same
+     reason as .win-burst: iOS Safari would otherwise centre the dialog in a
+     box that extends under its toolbar. */
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(10, 20, 16, 0.72);
   display: flex;
   align-items: center;
