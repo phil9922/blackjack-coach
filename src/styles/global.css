@@ -451,7 +451,8 @@ select:focus-visible {
 
 @media (max-width: 700px) {
   .felt-print {
-    height: clamp(56px, 10vh, 110px);
+    /* Decorative, and every pixel here is one the two hands can't have. */
+    height: clamp(40px, 6svh, 80px);
   }
 
   .felt-print__rule {
@@ -1260,7 +1261,7 @@ select:focus-visible {
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     /* Breathing room above the footer for the last seat's shadow. */
-    padding-bottom: 8px;
+    padding-bottom: 4px;
   }
 
   /* The felt scrolls now, so nothing on it needs to give up height to make
@@ -1288,10 +1289,31 @@ select:focus-visible {
     flex-shrink: 0;
     min-height: 0;
     margin: 0 calc(var(--felt-pad-x) * -1) -20px;
-    padding: 10px var(--felt-pad-x) calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 8px var(--felt-pad-x) calc(10px + env(safe-area-inset-bottom, 0px));
     background: var(--felt-deep);
     border-top: 1px solid var(--felt-line);
     box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.25);
+    /* One wrapping row of buttons rather than a column of rows: the action
+       buttons, the hint and Rewind used to stack as three rows (~200px of a
+       phone screen); flattened into the dock's own flow they pack into two. */
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dock .controls,
+  .dock .dock__actions {
+    display: contents;
+  }
+
+  .dock__hand,
+  .dock__waiting,
+  .insurance {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: center;
   }
 }
 
@@ -2915,9 +2937,29 @@ select:focus-visible {
   }
 
   /* Same seat-aware share, tuned to a phone's width. A solo table gets cards
-     worth reading; a full one falls to the floor size and wraps, as it must. */
+     worth reading; a full one falls to the floor size and wraps, as it must.
+     The svh term is what lets the dealer's hand and yours share one screen:
+     the felt has to fit under the header and above the button footer, and
+     svh (the viewport with Safari's toolbars showing, so it never jumps) is
+     the honest measure of that room. */
   .table {
-    --card-w: clamp(40px, calc((100vw - 24px) * 0.32 / var(--seats, 1)), 84px);
+    --card-w: clamp(40px, min(9.5svh, calc((100vw - 24px) * 0.32 / var(--seats, 1))), 84px);
+  }
+
+  .dealer__label {
+    margin-bottom: 4px;
+  }
+
+  /* The shoe's stack is a fraction of the card size, so a phone's shoe is
+     already smaller; trim its box too. --card-h has to come along because it
+     was resolved on .table and inherits as a finished length. */
+  .shoe {
+    --card-w: 58px;
+    --card-h: 82px;
+  }
+
+  .shoe__box {
+    padding: 4px 4px 7px;
   }
 
   /* Compact header: brand+bankroll row, controls row(s), full-width tabs. */
@@ -2956,10 +2998,12 @@ select:focus-visible {
     font-size: 0.76rem;
   }
 
+  /* The rank chip is the one header item that never fits beside the mode
+     toggle and drill button, so it cost a whole header row — ~45px of a
+     screen the dealer's hand and yours already have to share. It is on the
+     Skills tab, where it belongs; the header goes without it on a phone. */
   .rank-chip {
-    order: 5;
-    padding: 4px 10px;
-    font-size: 0.74rem;
+    display: none;
   }
 
   .tabs {
@@ -2981,10 +3025,10 @@ select:focus-visible {
   .table {
     --felt-pad-x: 12px;
     min-height: 0;
-    padding-top: 14px;
+    padding-top: 8px;
     padding-left: var(--felt-pad-x);
     padding-right: var(--felt-pad-x);
-    gap: 12px;
+    gap: 8px;
   }
 
   /* Keyboard hints mean nothing on a touchscreen and are what pushed the four
@@ -2997,7 +3041,7 @@ select:focus-visible {
 
   .btn--action,
   .btn--hint {
-    padding: 10px 12px;
+    padding: 9px 12px;
     font-size: 0.9rem;
   }
 
