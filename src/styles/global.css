@@ -1371,6 +1371,18 @@ select:focus-visible {
   color: var(--accent-deep);
 }
 
+/* Badge and level-up notices carry a sentence, not a headline — give them
+   the extra beat to be read. The timer in GameScreen matches. */
+.mobile-toast--badge .mobile-toast__stamp,
+.mobile-toast--levelup .mobile-toast__stamp {
+  color: var(--accent-deep);
+}
+
+.mobile-toast--badge,
+.mobile-toast--levelup {
+  animation-duration: 5.2s;
+}
+
 .mobile-toast__headline {
   margin: 2px 0 0;
   font-size: 0.84rem;

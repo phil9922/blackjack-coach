@@ -190,7 +190,7 @@ export function GameScreen({
   // auto-scrolled to.
   const [mobileToast, setMobileToast] = useState<{
     id: number
-    tone: 'book' | 'miss' | 'hint'
+    tone: 'book' | 'miss' | 'hint' | 'badge' | 'levelup'
     stamp: string
     headline: string
   } | null>(null)
@@ -201,9 +201,24 @@ export function GameScreen({
       setMobileToast({ id: toastSeq.current, tone: 'hint', stamp: 'HINT', headline: hint.explanation.headline })
     }
   }, [hint])
+  // Badges and level-ups live on the rail too, so on a phone a natural's
+  // "Natural" badge would be earned entirely out of sight — a chime with
+  // nothing to show for it. Same toast, a little longer, since there is more
+  // to read; the rail keeps the full notice with its dismiss button.
+  useEffect(() => {
+    if (!notice) return
+    toastSeq.current -= 1
+    setMobileToast({
+      id: toastSeq.current,
+      tone: notice.kind,
+      stamp: notice.kind === 'levelup' ? 'LEVEL UP' : 'BADGE',
+      headline: notice.text,
+    })
+  }, [notice])
   useEffect(() => {
     if (!mobileToast) return
-    const t = setTimeout(() => setMobileToast(null), 3400)
+    const long = mobileToast.tone === 'badge' || mobileToast.tone === 'levelup'
+    const t = setTimeout(() => setMobileToast(null), long ? 5200 : 3400)
     return () => clearTimeout(t)
   }, [mobileToast])
 
