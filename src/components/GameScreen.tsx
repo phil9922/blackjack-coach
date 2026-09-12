@@ -153,6 +153,31 @@ export function GameScreen({
 
   const isUserTurn = state.phase === 'seatTurn' && activeSeat(state)?.kind === 'user'
 
+  // On a phone the felt scrolls above a fixed footer of buttons (see
+  // .table__felt). A tall hand can push the player's own cards below the fold
+  // of that box, so follow the action: the player's seat is the last thing on
+  // the felt, so "scroll to the bottom" is "show my hand" whenever it's their
+  // move, and the dealer's draw lives at the top. No-op on desktop, where the
+  // felt never scrolls.
+  const feltRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = feltRef.current
+    if (!el || typeof el.scrollTo !== 'function') return
+    const target =
+      isUserTurn || state.phase === 'insurance' ? 'end' : state.phase === 'dealerTurn' ? 'start' : null
+    if (!target) return
+    // After the next paint, so the dock has already grown or shrunk for this
+    // state (a verdict's "Got it" row, the rewind button) and the felt's box
+    // is final. Instant rather than smooth: a smooth scroll is silently
+    // abandoned the moment the scroll box changes size, which it does every
+    // time a play is graded — and nothing would re-issue it afterwards.
+    const id = requestAnimationFrame(() => {
+      if (el.scrollHeight <= el.clientHeight) return
+      el.scrollTo({ top: target === 'end' ? el.scrollHeight : 0 })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [isUserTurn, state.phase, state.nextCard, state.activeHandIndex, state.awaitingAck])
+
   // Clear the hint as soon as the situation moves on.
   useEffect(() => {
     if (!isUserTurn) setHint(null)
@@ -285,6 +310,10 @@ export function GameScreen({
         data-phase={state.phase}
         style={{ '--seats': state.seats.length } as React.CSSProperties}
       >
+        {/* Everything above the dock. On a phone this is the box that scrolls,
+            so the buttons below it are a real footer the cards can never slide
+            under — see .table__felt in global.css. */}
+        <div className="table__felt" ref={feltRef}>
         {state.justShuffled && (
           <div className="shuffle-notice">Cut card reached — fresh shoe, count resets to 0</div>
         )}
@@ -365,6 +394,7 @@ export function GameScreen({
             />
           ))}
         </section>
+        </div>
 
         {mobileToast && (
           <div key={mobileToast.id} className={`mobile-toast mobile-toast--${mobileToast.tone}`}>

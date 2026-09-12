@@ -344,8 +344,11 @@ select:focus-visible {
     140px
   );
   --card-h: calc(var(--card-w) * 82 / 58);
+  /* Side padding as a variable so the dock can bleed to exactly the felt's
+     edge at every breakpoint (mobile narrows it below 700px). */
+  --felt-pad-x: 26px;
   position: relative;
-  padding: 26px 26px 20px;
+  padding: 26px var(--felt-pad-x) 20px;
   background:
     radial-gradient(ellipse 120% 90% at 50% 0%, var(--felt) 0%, var(--felt-deep) 100%);
   box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.45);
@@ -358,6 +361,18 @@ select:focus-visible {
    * 60px header — which is wrong the moment the header wraps on a narrow window,
    * over-reserving height and pushing the dock below the fold.
    */
+  min-height: 0;
+}
+
+/* The felt proper — everything above the dock. On desktop it is simply the
+   flexible middle of .table's column (the seats inside it still absorb the
+   spare height); on a phone it becomes the scroll box, so the dock beneath
+   it is a real footer rather than an overlay — see the mobile rules below. */
+.table__felt {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  flex: 1;
   min-height: 0;
 }
 
@@ -1211,27 +1226,23 @@ select:focus-visible {
 }
 
 /*
- * On mobile the felt was never a bounded box the way it is on desktop (see
- * .app--table below) — `.table` just grew to fit its content, and the whole
- * page scrolled. That breaks a sticky dock two different ways:
+ * On a phone the dock is a footer, not an overlay.
  *
- *  - `position: sticky` only pins within its own scrolling ancestor. With no
- *    bounded ancestor, that ancestor is the whole page — so at whatever
- *    scroll position you're actually at, the "stuck" dock isn't necessarily
- *    sitting below real content at all, it's just wherever flow left it.
- *  - `position: fixed` (tried first) pins to the *viewport*, not the
- *    document, so it floats over whatever page content happens to be
- *    scrolled to that spot right now — reserving space at the bottom of the
- *    document (e.g. via padding) does nothing for it at scrollY 0, where a
- *    tall page still has real content (the player's hand) under the fold.
+ * Desktop's sticky dock is designed to slide over the felt, fading the cards
+ * that pass beneath it. On a phone that is exactly the wrong trade: the header
+ * eats ~165px of the screen, so with a dealer hand, the printed arc, your own
+ * hand and two rows of buttons there is routinely less room than content, and
+ * an overlay dock lands on the player's cards — the thing they are trying to
+ * act on. Bounding .table alone and letting it scroll (the previous approach)
+ * did not help at the default scroll position, which is where you are the
+ * moment a card lands.
  *
- * The fix is the one desktop already uses: bound `.table` itself to exactly
- * the viewport height below the header, so it has its own internal scrollbar
- * for anything taller than that (many seats, a split), and a plain sticky
- * dock pins correctly to the bottom of that bounded, *actually* scrolling
- * box — the same mechanism as desktop, just measured via JS (--header-h,
- * see App.tsx) instead of a `100vh` grid row, since the header's own height
- * isn't fixed here.
+ * So: `.table` is bounded to the viewport below the header (measured by JS,
+ * --header-h, since the header wraps to a varying number of rows) and clips;
+ * the felt proper (`.table__felt`) is the box that scrolls; the dock is a
+ * plain flex footer after it, opaque, never over anything. Content taller
+ * than the felt scrolls behind the footer's top edge instead of under the
+ * buttons, and GameScreen scrolls the player's hand into view on their turn.
  */
 @media (max-width: 900px) {
   .table {
@@ -1241,18 +1252,22 @@ select:focus-visible {
        invalid and skipped, leaving the first one standing. */
     height: calc(100vh - var(--header-h, 170px));
     height: calc(100dvh - var(--header-h, 170px));
-    overflow-y: auto;
+    overflow: hidden;
   }
 
-  /* .seats already has flex: 1 (it absorbs the felt's spare height on its
-     own) so it — not an auto margin on the dock — is what's responsible for
-     reaching the bottom when content is short. In practice its grown size
-     runs a little past what's actually left once the sticky dock's own
-     height is accounted for, close enough to zero to read as a rounding
-     artifact rather than a real deficit — this margin is a deliberate,
-     generous floor under it instead of chasing the exact pixel. */
-  .seats {
-    margin-bottom: 20px;
+  .table__felt {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    /* Breathing room above the footer for the last seat's shadow. */
+    padding-bottom: 8px;
+  }
+
+  /* The felt scrolls now, so nothing on it needs to give up height to make
+     the buttons fit — the arc keeps its printed size instead of being
+     crushed flat the moment a hand runs long. */
+  .felt-print {
+    flex-shrink: 0;
   }
 
   /* While a bet is being sized the seats are empty outlines, and on a short
@@ -1264,13 +1279,19 @@ select:focus-visible {
   }
 
   .dock {
-    /* The desktop bleed above assumes .table's 26px padding; mobile's is
-       narrower (see .table below 700px) and a mismatched bleed is exactly
-       what pushed the dock 14px past the right edge into a horizontal
-       scrollbar. Not worth chasing the padding at every breakpoint — it
-       just sits inside the felt's own edge here instead. */
-    margin-left: 0;
-    margin-right: 0;
+    /* A real footer: in flow, never shrunk, never over the felt. It bleeds
+       to the felt's edges and bottom (the negative margins cancel .table's
+       padding, via the same variable, so it can't overshoot into a
+       horizontal scrollbar the way a hardcoded bleed once did) and is
+       opaque, so nothing shows through the buttons. */
+    position: static;
+    flex-shrink: 0;
+    min-height: 0;
+    margin: 0 calc(var(--felt-pad-x) * -1) -20px;
+    padding: 10px var(--felt-pad-x) calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--felt-deep);
+    border-top: 1px solid var(--felt-line);
+    box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.25);
   }
 }
 
@@ -2958,11 +2979,26 @@ select:focus-visible {
      900px needs to touch it, and the shorthand would otherwise silently
      reset whatever the base rule or another breakpoint had set there. */
   .table {
+    --felt-pad-x: 12px;
     min-height: 0;
     padding-top: 14px;
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: var(--felt-pad-x);
+    padding-right: var(--felt-pad-x);
     gap: 12px;
+  }
+
+  /* Keyboard hints mean nothing on a touchscreen and are what pushed the four
+     action buttons onto a second row; without them Hit / Stand / Double /
+     Split fit one row on a 375px phone. */
+  .btn--action kbd,
+  .btn--rewind kbd {
+    display: none;
+  }
+
+  .btn--action,
+  .btn--hint {
+    padding: 10px 12px;
+    font-size: 0.9rem;
   }
 
   .seats {
